@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import { accounts, instruments, trades } from '../../db/schema';
 
 function variance(values: number[]): number {

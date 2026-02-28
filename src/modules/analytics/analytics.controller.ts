@@ -1,7 +1,17 @@
 import { Controller, Get, Param, Query, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
-  accountAnalyticsQuerySchema,
+  AccountIdParamDto,
+  accountIdParamSchema,
+  AccountInstrumentsQueryDto,
+  accountInstrumentsQuerySchema,
+  AccountMonthQueryDto,
+  accountMonthQuerySchema,
+  AccountOverviewQueryDto,
+  accountOverviewQuerySchema,
+  AccountRecentTradesQueryDto,
+  accountRecentTradesQuerySchema,
+  HomeAnalyticsQueryDto,
   homeAnalyticsQuerySchema,
 } from './analytics.schemas';
 import { AnalyticsService } from './analytics.service';
@@ -12,9 +22,7 @@ export class AnalyticsController {
 
   @Get('home')
   @UsePipes(new ZodValidationPipe(homeAnalyticsQuerySchema))
-  async home(
-    @Query() query: { date_from: string; date_to: string; account_id?: string },
-  ) {
+  async home(@Query() query: HomeAnalyticsQueryDto) {
     const data = await this.analyticsService.home({
       dateFrom: query.date_from,
       dateTo: query.date_to,
@@ -32,15 +40,14 @@ export class AnalyticsController {
 
   @Get('accounts/:id/overview')
   @UsePipes(
-    new ZodValidationPipe(
-      accountAnalyticsQuerySchema.pick({ date_from: true, date_to: true }),
-    ),
+    new ZodValidationPipe(accountIdParamSchema),
+    new ZodValidationPipe(accountOverviewQuerySchema),
   )
   async overview(
-    @Param('id') id: string,
-    @Query() query: { date_from: string; date_to: string },
+    @Param() params: AccountIdParamDto,
+    @Query() query: AccountOverviewQueryDto,
   ) {
-    const data = await this.analyticsService.accountOverview(id, {
+    const data = await this.analyticsService.accountOverview(params.id, {
       dateFrom: query.date_from,
       dateTo: query.date_to,
     });
@@ -49,26 +56,14 @@ export class AnalyticsController {
 
   @Get('accounts/:id/instruments')
   @UsePipes(
-    new ZodValidationPipe(
-      accountAnalyticsQuerySchema.pick({
-        date_from: true,
-        date_to: true,
-        page: true,
-        page_size: true,
-      }),
-    ),
+    new ZodValidationPipe(accountIdParamSchema),
+    new ZodValidationPipe(accountInstrumentsQuerySchema),
   )
   async instruments(
-    @Param('id') id: string,
-    @Query()
-    query: {
-      date_from: string;
-      date_to: string;
-      page: number;
-      page_size: number;
-    },
+    @Param() params: AccountIdParamDto,
+    @Query() query: AccountInstrumentsQueryDto,
   ) {
-    const data = await this.analyticsService.accountInstruments(id, {
+    const data = await this.analyticsService.accountInstruments(params.id, {
       dateFrom: query.date_from,
       dateTo: query.date_to,
       page: query.page,
@@ -79,15 +74,14 @@ export class AnalyticsController {
 
   @Get('accounts/:id/sessions')
   @UsePipes(
-    new ZodValidationPipe(
-      accountAnalyticsQuerySchema.pick({ date_from: true, date_to: true }),
-    ),
+    new ZodValidationPipe(accountIdParamSchema),
+    new ZodValidationPipe(accountOverviewQuerySchema),
   )
   async sessions(
-    @Param('id') id: string,
-    @Query() query: { date_from: string; date_to: string },
+    @Param() params: AccountIdParamDto,
+    @Query() query: AccountOverviewQueryDto,
   ) {
-    const data = await this.analyticsService.accountSessions(id, {
+    const data = await this.analyticsService.accountSessions(params.id, {
       dateFrom: query.date_from,
       dateTo: query.date_to,
     });
@@ -96,30 +90,33 @@ export class AnalyticsController {
 
   @Get('accounts/:id/entry-time-heatmap')
   @UsePipes(
-    new ZodValidationPipe(
-      accountAnalyticsQuerySchema.pick({ date_from: true, date_to: true }),
-    ),
+    new ZodValidationPipe(accountIdParamSchema),
+    new ZodValidationPipe(accountOverviewQuerySchema),
   )
   async heatmap(
-    @Param('id') id: string,
-    @Query() query: { date_from: string; date_to: string },
+    @Param() params: AccountIdParamDto,
+    @Query() query: AccountOverviewQueryDto,
   ) {
-    const data = await this.analyticsService.accountEntryTimeHeatmap(id, {
-      dateFrom: query.date_from,
-      dateTo: query.date_to,
-    });
+    const data = await this.analyticsService.accountEntryTimeHeatmap(
+      params.id,
+      {
+        dateFrom: query.date_from,
+        dateTo: query.date_to,
+      },
+    );
     return { data };
   }
 
   @Get('accounts/:id/pnl-calendar')
   @UsePipes(
-    new ZodValidationPipe(accountAnalyticsQuerySchema.pick({ month: true })),
+    new ZodValidationPipe(accountIdParamSchema),
+    new ZodValidationPipe(accountMonthQuerySchema),
   )
   async pnlCalendar(
-    @Param('id') id: string,
-    @Query() query: { month?: string },
+    @Param() params: AccountIdParamDto,
+    @Query() query: AccountMonthQueryDto,
   ) {
-    const data = await this.analyticsService.accountPnlCalendar(id, {
+    const data = await this.analyticsService.accountPnlCalendar(params.id, {
       month: query.month,
     });
     return { data };
@@ -127,11 +124,15 @@ export class AnalyticsController {
 
   @Get('accounts/:id/trades/recent')
   @UsePipes(
-    new ZodValidationPipe(accountAnalyticsQuerySchema.pick({ limit: true })),
+    new ZodValidationPipe(accountIdParamSchema),
+    new ZodValidationPipe(accountRecentTradesQuerySchema),
   )
-  async recent(@Param('id') id: string, @Query() query: { limit: number }) {
+  async recent(
+    @Param() params: AccountIdParamDto,
+    @Query() query: AccountRecentTradesQueryDto,
+  ) {
     const data = await this.analyticsService.accountRecentTrades(
-      id,
+      params.id,
       query.limit,
     );
     return { data };
