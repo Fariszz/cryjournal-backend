@@ -41,7 +41,9 @@ export const accountIdParamSchema = z.object({
   id: z.string().uuid(),
 });
 
-export class HomeAnalyticsQueryDto extends createZodDto(homeAnalyticsQuerySchema) {}
+export class HomeAnalyticsQueryDto extends createZodDto(
+  homeAnalyticsQuerySchema,
+) {}
 
 export class AccountOverviewQueryDto extends createZodDto(
   accountOverviewQuerySchema,
@@ -51,7 +53,9 @@ export class AccountInstrumentsQueryDto extends createZodDto(
   accountInstrumentsQuerySchema,
 ) {}
 
-export class AccountMonthQueryDto extends createZodDto(accountMonthQuerySchema) {}
+export class AccountMonthQueryDto extends createZodDto(
+  accountMonthQuerySchema,
+) {}
 
 export class AccountRecentTradesQueryDto extends createZodDto(
   accountRecentTradesQuerySchema,

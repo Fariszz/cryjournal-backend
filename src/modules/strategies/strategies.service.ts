@@ -12,7 +12,10 @@ import {
   strategySteps,
   trades,
 } from '../../db/schema';
-import type { StrategyCreateDto, StrategyUpdateDto } from './strategies.schemas';
+import type {
+  StrategyCreateDto,
+  StrategyUpdateDto,
+} from './strategies.schemas';
 
 @Injectable()
 export class StrategiesService {
@@ -91,10 +94,7 @@ export class StrategiesService {
     };
   }
 
-  async update(
-    id: string,
-    input: StrategyUpdateDto,
-  ) {
+  async update(id: string, input: StrategyUpdateDto) {
     const [updated] = await this.db
       .update(strategies)
       .set({

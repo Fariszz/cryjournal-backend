@@ -3,9 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { tradeContextEvents } from '../../db/schema';
-import {
-  ECONOMIC_CALENDAR_PROVIDER,
-} from './economic-calendar.provider';
+import { ECONOMIC_CALENDAR_PROVIDER } from './economic-calendar.provider';
 import type { EconomicCalendarProvider } from './economic-calendar.provider';
 import type {
   AttachContextEventDto,
@@ -40,10 +38,7 @@ export class EconomicCalendarService {
     return data;
   }
 
-  async attachEventToTrade(
-    tradeId: string,
-    input: AttachContextEventDto,
-  ) {
+  async attachEventToTrade(tradeId: string, input: AttachContextEventDto) {
     const [created] = await this.db
       .insert(tradeContextEvents)
       .values({

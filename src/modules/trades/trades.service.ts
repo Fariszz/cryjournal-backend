@@ -6,9 +6,7 @@ import {
 } from '@nestjs/common';
 import { and, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
 import { env } from '../../common/config/env';
-import {
-  STORAGE_PROVIDER,
-} from '../../common/storage/storage.provider';
+import { STORAGE_PROVIDER } from '../../common/storage/storage.provider';
 import type { StorageProvider } from '../../common/storage/storage.provider';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';

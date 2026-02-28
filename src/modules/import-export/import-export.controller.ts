@@ -10,10 +10,7 @@ import {
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
-import {
-  ExportQueryDto,
-  exportQuerySchema,
-} from './import-export.schemas';
+import { ExportQueryDto, exportQuerySchema } from './import-export.schemas';
 import { ImportExportService } from './import-export.service';
 
 @Controller()

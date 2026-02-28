@@ -46,10 +46,7 @@ export class TradesController {
     new ZodValidationPipe(tradeIdParamSchema),
     new ZodValidationPipe(tradeUpdateSchema),
   )
-  async update(
-    @Param() params: TradeIdParamDto,
-    @Body() body: TradeUpdateDto,
-  ) {
+  async update(@Param() params: TradeIdParamDto, @Body() body: TradeUpdateDto) {
     const data = await this.tradesService.update(params.id, body);
     return { data };
   }

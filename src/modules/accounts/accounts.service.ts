@@ -26,10 +26,7 @@ export class AccountsService {
     return created;
   }
 
-  async updateGroup(
-    id: string,
-    input: AccountGroupUpdateDto,
-  ) {
+  async updateGroup(id: string, input: AccountGroupUpdateDto) {
     const [updated] = await this.db
       .update(accountGroups)
       .set({
