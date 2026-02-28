@@ -12,6 +12,8 @@ import { DemonsService } from './demons.service';
 import {
   DemonCreateDto,
   demonCreateSchema,
+  DemonIdParamDto,
+  demonIdParamSchema,
   DemonUpdateDto,
   demonUpdateSchema,
   EvidenceCreateDto,
@@ -36,37 +38,46 @@ export class DemonsController {
   }
 
   @Get(':id')
-  async get(@Param('id') id: string) {
-    const data = await this.demonsService.getById(id);
+  @UsePipes(new ZodValidationPipe(demonIdParamSchema))
+  async get(@Param() params: DemonIdParamDto) {
+    const data = await this.demonsService.getById(params.id);
     return { data };
   }
 
   @Put(':id')
-  @UsePipes(new ZodValidationPipe(demonUpdateSchema))
-  async update(@Param('id') id: string, @Body() body: DemonUpdateDto) {
-    const data = await this.demonsService.update(id, body as never);
+  @UsePipes(
+    new ZodValidationPipe(demonIdParamSchema),
+    new ZodValidationPipe(demonUpdateSchema),
+  )
+  async update(@Param() params: DemonIdParamDto, @Body() body: DemonUpdateDto) {
+    const data = await this.demonsService.update(params.id, body);
     return { data };
   }
 
   @Post(':id/evidence')
-  @UsePipes(new ZodValidationPipe(evidenceCreateSchema))
+  @UsePipes(
+    new ZodValidationPipe(demonIdParamSchema),
+    new ZodValidationPipe(evidenceCreateSchema),
+  )
   async createEvidence(
-    @Param('id') id: string,
+    @Param() params: DemonIdParamDto,
     @Body() body: EvidenceCreateDto,
   ) {
-    const data = await this.demonsService.createEvidence(id, body);
+    const data = await this.demonsService.createEvidence(params.id, body);
     return { data };
   }
 
   @Get(':id/evidence')
-  async listEvidence(@Param('id') id: string) {
-    const data = await this.demonsService.listEvidence(id);
+  @UsePipes(new ZodValidationPipe(demonIdParamSchema))
+  async listEvidence(@Param() params: DemonIdParamDto) {
+    const data = await this.demonsService.listEvidence(params.id);
     return { data };
   }
 
   @Get(':id/performance')
-  async performance(@Param('id') id: string) {
-    const data = await this.demonsService.performance(id);
+  @UsePipes(new ZodValidationPipe(demonIdParamSchema))
+  async performance(@Param() params: DemonIdParamDto) {
+    const data = await this.demonsService.performance(params.id);
     return { data };
   }
 }

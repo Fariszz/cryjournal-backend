@@ -23,8 +23,14 @@ export const evidenceCreateSchema = z.object({
   screenshotPath: z.string().optional(),
 });
 
+export const demonIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
 export class DemonCreateDto extends createZodDto(demonCreateSchema) {}
 
 export class DemonUpdateDto extends createZodDto(demonUpdateSchema) {}
 
 export class EvidenceCreateDto extends createZodDto(evidenceCreateSchema) {}
+
+export class DemonIdParamDto extends createZodDto(demonIdParamSchema) {}
