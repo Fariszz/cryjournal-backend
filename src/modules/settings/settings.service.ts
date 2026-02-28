@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import { appSettings } from '../../db/schema';
-import { UpdateSettingsInput } from './settings.schemas';
+import type { UpdateSettingsDto } from './settings.schemas';
 
 const SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -19,7 +19,7 @@ export class SettingsService {
     return settings ?? null;
   }
 
-  async updateSettings(input: UpdateSettingsInput) {
+  async updateSettings(input: UpdateSettingsDto) {
     const existing = await this.getSettings();
     if (!existing) {
       const [created] = await this.db

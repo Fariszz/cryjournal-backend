@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Put, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import { SettingsService } from './settings.service';
-import { updateSettingsSchema } from './settings.schemas';
+import { UpdateSettingsDto, updateSettingsSchema } from './settings.schemas';
 
 @Controller('settings')
 export class SettingsController {
@@ -15,8 +15,8 @@ export class SettingsController {
 
   @Put()
   @UsePipes(new ZodValidationPipe(updateSettingsSchema))
-  async updateSettings(@Body() body: unknown) {
-    const data = await this.settingsService.updateSettings(body as never);
+  async updateSettings(@Body() body: UpdateSettingsDto) {
+    const data = await this.settingsService.updateSettings(body);
     return { data };
   }
 }

@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const updateSettingsSchema = z.object({
@@ -16,5 +17,7 @@ export const updateSettingsSchema = z.object({
     .optional(),
   riskParameters: z.record(z.string(), z.unknown()).optional(),
 });
+
+export class UpdateSettingsDto extends createZodDto(updateSettingsSchema) {}
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
