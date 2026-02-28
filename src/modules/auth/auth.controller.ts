@@ -13,7 +13,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { Public } from '../../common/auth/public.decorator';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import { AuthService } from './auth.service';
-import { loginSchema } from './auth.schemas';
+import { LoginDto, loginSchema } from './auth.schemas';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +24,7 @@ export class AuthController {
   @HttpCode(200)
   @UsePipes(new ZodValidationPipe(loginSchema))
   async login(
-    @Body() body: { email: string; password: string },
+    @Body() body: LoginDto,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const data = await this.authService.login(body.email, body.password, reply);
