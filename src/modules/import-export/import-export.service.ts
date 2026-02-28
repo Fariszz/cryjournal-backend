@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { and, desc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import { accounts, dailyJournals, instruments, trades } from '../../db/schema';
 import { InstrumentsService } from '../instruments/instruments.service';
 import { TradesService } from '../trades/trades.service';

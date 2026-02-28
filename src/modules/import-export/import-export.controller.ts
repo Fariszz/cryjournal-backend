@@ -6,8 +6,14 @@ import {
   Query,
   Req,
   Res,
+  UsePipes,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
+import {
+  ExportQueryDto,
+  exportQuerySchema,
+} from './import-export.schemas';
 import { ImportExportService } from './import-export.service';
 
 @Controller()
@@ -32,8 +38,9 @@ export class ImportExportController {
   }
 
   @Get('export/trades.csv')
+  @UsePipes(new ZodValidationPipe(exportQuerySchema))
   async exportTrades(
-    @Query() query: { date_from?: string; date_to?: string },
+    @Query() query: ExportQueryDto,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const csv = await this.importExportService.exportTradesCsv({
@@ -46,8 +53,9 @@ export class ImportExportController {
   }
 
   @Get('export/journals.csv')
+  @UsePipes(new ZodValidationPipe(exportQuerySchema))
   async exportJournals(
-    @Query() query: { date_from?: string; date_to?: string },
+    @Query() query: ExportQueryDto,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const csv = await this.importExportService.exportJournalsCsv({
