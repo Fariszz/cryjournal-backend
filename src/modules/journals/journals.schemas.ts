@@ -1,0 +1,30 @@
+import { z } from 'zod';
+
+export const journalCreateSchema = z.object({
+  date: z.string().min(1),
+  accountId: z.string().uuid().optional(),
+  mood: z.number().min(1).max(5).optional(),
+  energy: z.number().min(1).max(5).optional(),
+  focus: z.number().min(1).max(5).optional(),
+  confidence: z.number().min(1).max(5).optional(),
+  plan: z.string().optional(),
+  executionNotes: z.string().optional(),
+  lessons: z.string().optional(),
+  nextActions: z.string().optional(),
+  tradeIds: z.array(z.string().uuid()).optional(),
+  demonIds: z.array(z.string().uuid()).optional(),
+});
+
+export const journalUpdateSchema = journalCreateSchema
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export const journalListQuerySchema = z.object({
+  date_from: z.string().optional(),
+  date_to: z.string().optional(),
+  account_id: z.string().uuid().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  page_size: z.coerce.number().int().positive().max(100).default(20),
+});
