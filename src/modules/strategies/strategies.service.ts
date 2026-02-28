@@ -5,13 +5,14 @@ import {
 } from '@nestjs/common';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import {
   strategies,
   strategyConfluences,
   strategySteps,
   trades,
 } from '../../db/schema';
+import type { StrategyCreateDto, StrategyUpdateDto } from './strategies.schemas';
 
 @Injectable()
 export class StrategiesService {
@@ -21,20 +22,7 @@ export class StrategiesService {
     return this.db.select().from(strategies);
   }
 
-  async create(input: {
-    name: string;
-    description?: string;
-    tags: string[];
-    playbookScoreSchema?: Record<string, unknown>;
-    steps: Array<{ stepIndex: number; title: string; description?: string }>;
-    confluences: Array<{
-      name: string;
-      impactWeight: number;
-      ruleType: string;
-      ruleConfig?: Record<string, unknown>;
-      sortOrder?: number;
-    }>;
-  }) {
+  async create(input: StrategyCreateDto) {
     const [strategy] = await this.db
       .insert(strategies)
       .values({
@@ -105,20 +93,7 @@ export class StrategiesService {
 
   async update(
     id: string,
-    input: Partial<{
-      name: string;
-      description?: string;
-      tags: string[];
-      playbookScoreSchema?: Record<string, unknown>;
-      steps: Array<{ stepIndex: number; title: string; description?: string }>;
-      confluences: Array<{
-        name: string;
-        impactWeight: number;
-        ruleType: string;
-        ruleConfig?: Record<string, unknown>;
-        sortOrder?: number;
-      }>;
-    }>,
+    input: StrategyUpdateDto,
   ) {
     const [updated] = await this.db
       .update(strategies)

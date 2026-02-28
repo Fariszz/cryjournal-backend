@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const strategyStepSchema = z.object({
@@ -28,3 +29,13 @@ export const updateStrategySchema = createStrategySchema
   .refine((value) => Object.keys(value).length > 0, {
     message: 'At least one field is required',
   });
+
+export const strategyIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export class StrategyCreateDto extends createZodDto(createStrategySchema) {}
+
+export class StrategyUpdateDto extends createZodDto(updateStrategySchema) {}
+
+export class StrategyIdParamDto extends createZodDto(strategyIdParamSchema) {}

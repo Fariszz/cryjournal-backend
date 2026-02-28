@@ -11,6 +11,10 @@ import {
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
   createStrategySchema,
+  StrategyCreateDto,
+  StrategyIdParamDto,
+  strategyIdParamSchema,
+  StrategyUpdateDto,
   updateStrategySchema,
 } from './strategies.schemas';
 import { StrategiesService } from './strategies.service';
@@ -27,33 +31,42 @@ export class StrategiesController {
 
   @Post()
   @UsePipes(new ZodValidationPipe(createStrategySchema))
-  async create(@Body() body: unknown) {
-    const data = await this.strategiesService.create(body as never);
+  async create(@Body() body: StrategyCreateDto) {
+    const data = await this.strategiesService.create(body);
     return { data };
   }
 
   @Get(':id')
-  async get(@Param('id') id: string) {
-    const data = await this.strategiesService.getById(id);
+  @UsePipes(new ZodValidationPipe(strategyIdParamSchema))
+  async get(@Param() params: StrategyIdParamDto) {
+    const data = await this.strategiesService.getById(params.id);
     return { data };
   }
 
   @Put(':id')
-  @UsePipes(new ZodValidationPipe(updateStrategySchema))
-  async update(@Param('id') id: string, @Body() body: unknown) {
-    const data = await this.strategiesService.update(id, body as never);
+  @UsePipes(
+    new ZodValidationPipe(strategyIdParamSchema),
+    new ZodValidationPipe(updateStrategySchema),
+  )
+  async update(
+    @Param() params: StrategyIdParamDto,
+    @Body() body: StrategyUpdateDto,
+  ) {
+    const data = await this.strategiesService.update(params.id, body);
     return { data };
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const data = await this.strategiesService.remove(id);
+  @UsePipes(new ZodValidationPipe(strategyIdParamSchema))
+  async remove(@Param() params: StrategyIdParamDto) {
+    const data = await this.strategiesService.remove(params.id);
     return { data };
   }
 
   @Get(':id/analytics')
-  async analytics(@Param('id') id: string) {
-    const data = await this.strategiesService.analytics(id);
+  @UsePipes(new ZodValidationPipe(strategyIdParamSchema))
+  async analytics(@Param() params: StrategyIdParamDto) {
+    const data = await this.strategiesService.analytics(params.id);
     return { data };
   }
 }
