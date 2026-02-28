@@ -31,8 +31,22 @@ export const journalListQuerySchema = z.object({
   page_size: z.coerce.number().int().positive().max(100).default(20),
 });
 
+export const journalIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const journalAttachmentIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
 export class JournalListQueryDto extends createZodDto(journalListQuerySchema) {}
 
 export class JournalCreateDto extends createZodDto(journalCreateSchema) {}
 
 export class JournalUpdateDto extends createZodDto(journalUpdateSchema) {}
+
+export class JournalIdParamDto extends createZodDto(journalIdParamSchema) {}
+
+export class JournalAttachmentIdParamDto extends createZodDto(
+  journalAttachmentIdParamSchema,
+) {}

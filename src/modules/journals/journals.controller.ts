@@ -15,8 +15,12 @@ import type { FastifyRequest } from 'fastify';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
+  JournalAttachmentIdParamDto,
+  journalAttachmentIdParamSchema,
   JournalCreateDto,
   journalCreateSchema,
+  JournalIdParamDto,
+  journalIdParamSchema,
   JournalListQueryDto,
   journalListQuerySchema,
   JournalUpdateDto,
@@ -52,15 +56,22 @@ export class JournalsController {
   }
 
   @Get('daily-journals/:id')
-  async get(@Param('id') id: string) {
-    const data = await this.journalsService.getById(id);
+  @UsePipes(new ZodValidationPipe(journalIdParamSchema))
+  async get(@Param() params: JournalIdParamDto) {
+    const data = await this.journalsService.getById(params.id);
     return { data };
   }
 
   @Put('daily-journals/:id')
-  @UsePipes(new ZodValidationPipe(journalUpdateSchema))
-  async update(@Param('id') id: string, @Body() body: JournalUpdateDto) {
-    const data = await this.journalsService.update(id, body);
+  @UsePipes(
+    new ZodValidationPipe(journalIdParamSchema),
+    new ZodValidationPipe(journalUpdateSchema),
+  )
+  async update(
+    @Param() params: JournalIdParamDto,
+    @Body() body: JournalUpdateDto,
+  ) {
+    const data = await this.journalsService.update(params.id, body);
     return { data };
   }
 
@@ -82,15 +93,18 @@ export class JournalsController {
         message: 'File too large',
       });
     }
-    const journalId = String(filePart.fields?.journal_id?.value ?? '');
+    const fields = filePart.fields as
+      | Record<string, { value?: unknown } | undefined>
+      | undefined;
+    const journalId = String(fields?.journal_id?.value ?? '');
     if (!journalId) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
         message: 'journal_id is required',
       });
     }
-    const caption = filePart.fields?.caption?.value
-      ? String(filePart.fields.caption.value)
+    const caption = fields?.caption?.value
+      ? String(fields.caption.value)
       : undefined;
     const data = await this.journalsService.addAttachment(
       journalId,
@@ -105,8 +119,9 @@ export class JournalsController {
   }
 
   @Delete('daily-journal-attachments/:id')
-  async deleteAttachment(@Param('id') id: string) {
-    const data = await this.journalsService.deleteAttachment(id);
+  @UsePipes(new ZodValidationPipe(journalAttachmentIdParamSchema))
+  async deleteAttachment(@Param() params: JournalAttachmentIdParamDto) {
+    const data = await this.journalsService.deleteAttachment(params.id);
     return { data };
   }
 }
