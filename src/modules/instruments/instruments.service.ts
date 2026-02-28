@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { instruments } from '../../db/schema';
+import { InstrumentCreateDto } from './instruments.schemas';
 
 @Injectable()
 export class InstrumentsService {
@@ -12,7 +13,7 @@ export class InstrumentsService {
     return this.db.select().from(instruments);
   }
 
-  async create(input: { symbol: string; category: string }) {
+  async create(input: InstrumentCreateDto) {
     const [existing] = await this.db
       .select()
       .from(instruments)

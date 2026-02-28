@@ -1,6 +1,9 @@
 import { Body, Controller, Get, Post, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
-import { instrumentCreateSchema } from './instruments.schemas';
+import {
+  InstrumentCreateDto,
+  instrumentCreateSchema,
+} from './instruments.schemas';
 import { InstrumentsService } from './instruments.service';
 
 @Controller('instruments')
@@ -15,7 +18,7 @@ export class InstrumentsController {
 
   @Post()
   @UsePipes(new ZodValidationPipe(instrumentCreateSchema))
-  async create(@Body() body: unknown) {
+  async create(@Body() body: InstrumentCreateDto) {
     const data = await this.instrumentsService.create(body as never);
     return { data };
   }
