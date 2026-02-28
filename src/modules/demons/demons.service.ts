@@ -2,11 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
+import { demonEvidenceLogs, demonPerformanceLogs, demons } from '@db/schema';
 import {
-  demonEvidenceLogs,
-  demonPerformanceLogs,
-  demons,
-} from '@db/schema';
+  DemonCreateDto,
+  DemonUpdateDto,
+  EvidenceCreateDto,
+} from './demons.schemas';
 
 @Injectable()
 export class DemonsService {
@@ -16,14 +17,7 @@ export class DemonsService {
     return this.db.select().from(demons);
   }
 
-  async create(input: {
-    name: string;
-    trigger?: string;
-    pattern?: string;
-    consequence?: string;
-    counterPlan?: string;
-    preventionChecklist: string[];
-  }) {
+  async create(input: DemonCreateDto) {
     const [created] = await this.db
       .insert(demons)
       .values({
@@ -52,17 +46,7 @@ export class DemonsService {
     return demon;
   }
 
-  async update(
-    id: string,
-    input: Partial<{
-      name: string;
-      trigger?: string;
-      pattern?: string;
-      consequence?: string;
-      counterPlan?: string;
-      preventionChecklist: string[];
-    }>,
-  ) {
+  async update(id: string, input: DemonUpdateDto) {
     const [updated] = await this.db
       .update(demons)
       .set({
@@ -80,15 +64,7 @@ export class DemonsService {
     return updated;
   }
 
-  async createEvidence(
-    demonId: string,
-    input: {
-      tradeId?: string;
-      dailyJournalId?: string;
-      note?: string;
-      screenshotPath?: string;
-    },
-  ) {
+  async createEvidence(demonId: string, input: EvidenceCreateDto) {
     await this.getById(demonId);
     const [created] = await this.db
       .insert(demonEvidenceLogs)

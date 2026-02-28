@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const demonCreateSchema = z.object({
@@ -21,3 +22,9 @@ export const evidenceCreateSchema = z.object({
   note: z.string().optional(),
   screenshotPath: z.string().optional(),
 });
+
+export class DemonCreateDto extends createZodDto(demonCreateSchema) {}
+
+export class DemonUpdateDto extends createZodDto(demonUpdateSchema) {}
+
+export class EvidenceCreateDto extends createZodDto(evidenceCreateSchema) {}

@@ -10,8 +10,11 @@ import {
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import { DemonsService } from './demons.service';
 import {
+  DemonCreateDto,
   demonCreateSchema,
+  DemonUpdateDto,
   demonUpdateSchema,
+  EvidenceCreateDto,
   evidenceCreateSchema,
 } from './demons.schemas';
 
@@ -27,8 +30,8 @@ export class DemonsController {
 
   @Post()
   @UsePipes(new ZodValidationPipe(demonCreateSchema))
-  async create(@Body() body: unknown) {
-    const data = await this.demonsService.create(body as never);
+  async create(@Body() body: DemonCreateDto) {
+    const data = await this.demonsService.create(body);
     return { data };
   }
 
@@ -40,15 +43,18 @@ export class DemonsController {
 
   @Put(':id')
   @UsePipes(new ZodValidationPipe(demonUpdateSchema))
-  async update(@Param('id') id: string, @Body() body: unknown) {
+  async update(@Param('id') id: string, @Body() body: DemonUpdateDto) {
     const data = await this.demonsService.update(id, body as never);
     return { data };
   }
 
   @Post(':id/evidence')
   @UsePipes(new ZodValidationPipe(evidenceCreateSchema))
-  async createEvidence(@Param('id') id: string, @Body() body: unknown) {
-    const data = await this.demonsService.createEvidence(id, body as never);
+  async createEvidence(
+    @Param('id') id: string,
+    @Body() body: EvidenceCreateDto,
+  ) {
+    const data = await this.demonsService.createEvidence(id, body);
     return { data };
   }
 
