@@ -1,3 +1,5 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const journalCreateSchema = z.object({
@@ -28,3 +30,9 @@ export const journalListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   page_size: z.coerce.number().int().positive().max(100).default(20),
 });
+
+export class JournalListQueryDto extends createZodDto(journalListQuerySchema) {}
+
+export class JournalCreateDto extends createZodDto(journalCreateSchema) {}
+
+export class JournalUpdateDto extends createZodDto(journalUpdateSchema) {}

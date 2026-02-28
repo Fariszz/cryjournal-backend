@@ -1,17 +1,16 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
-import {
-  STORAGE_PROVIDER,
-  StorageProvider,
-} from '../../common/storage/storage.provider';
+import { STORAGE_PROVIDER } from '../../common/storage/storage.provider';
+import type { StorageProvider } from '../../common/storage/storage.provider';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import {
   dailyJournalAttachments,
   dailyJournalDemons,
   dailyJournalTrades,
   dailyJournals,
 } from '../../db/schema';
+import { JournalCreateDto, JournalUpdateDto } from './journals.schemas';
 
 @Injectable()
 export class JournalsService {
@@ -63,20 +62,7 @@ export class JournalsService {
     };
   }
 
-  async create(input: {
-    date: string;
-    accountId?: string;
-    mood?: number;
-    energy?: number;
-    focus?: number;
-    confidence?: number;
-    plan?: string;
-    executionNotes?: string;
-    lessons?: string;
-    nextActions?: string;
-    tradeIds?: string[];
-    demonIds?: string[];
-  }) {
+  async create(input: JournalCreateDto) {
     const [created] = await this.db
       .insert(dailyJournals)
       .values({
@@ -136,23 +122,7 @@ export class JournalsService {
     };
   }
 
-  async update(
-    id: string,
-    input: Partial<{
-      date: string;
-      accountId?: string;
-      mood?: number;
-      energy?: number;
-      focus?: number;
-      confidence?: number;
-      plan?: string;
-      executionNotes?: string;
-      lessons?: string;
-      nextActions?: string;
-      tradeIds?: string[];
-      demonIds?: string[];
-    }>,
-  ) {
+  async update(id: string, input: JournalUpdateDto) {
     const [updated] = await this.db
       .update(dailyJournals)
       .set({

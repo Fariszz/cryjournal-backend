@@ -15,8 +15,11 @@ import type { FastifyRequest } from 'fastify';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
+  JournalCreateDto,
   journalCreateSchema,
+  JournalListQueryDto,
   journalListQuerySchema,
+  JournalUpdateDto,
   journalUpdateSchema,
 } from './journals.schemas';
 import { JournalsService } from './journals.service';
@@ -29,13 +32,7 @@ export class JournalsController {
   @UsePipes(new ZodValidationPipe(journalListQuerySchema))
   async list(
     @Query()
-    query: {
-      date_from?: string;
-      date_to?: string;
-      account_id?: string;
-      page: number;
-      page_size: number;
-    },
+    query: JournalListQueryDto,
   ) {
     const data = await this.journalsService.list({
       dateFrom: query.date_from,
@@ -49,8 +46,8 @@ export class JournalsController {
 
   @Post('daily-journals')
   @UsePipes(new ZodValidationPipe(journalCreateSchema))
-  async create(@Body() body: unknown) {
-    const data = await this.journalsService.create(body as never);
+  async create(@Body() body: JournalCreateDto) {
+    const data = await this.journalsService.create(body);
     return { data };
   }
 
@@ -62,8 +59,8 @@ export class JournalsController {
 
   @Put('daily-journals/:id')
   @UsePipes(new ZodValidationPipe(journalUpdateSchema))
-  async update(@Param('id') id: string, @Body() body: unknown) {
-    const data = await this.journalsService.update(id, body as never);
+  async update(@Param('id') id: string, @Body() body: JournalUpdateDto) {
+    const data = await this.journalsService.update(id, body);
     return { data };
   }
 
