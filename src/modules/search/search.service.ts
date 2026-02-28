@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { and, ilike, isNull, or } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import {
   demons,
   instruments,
