@@ -24,7 +24,7 @@ export const envSchema = z.object({
     .default(5 * 1024 * 1024),
   LOGIN_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   LOGIN_LOCKOUT_MINUTES: z.coerce.number().int().positive().default(15),
-  ADMIN_EMAIL: z.string().email().default('admin@cryjournal.local'),
+  ADMIN_EMAIL: z.email().default('admin@cryjournal.local'),
   ADMIN_PASSWORD: z.string().min(8).default('ChangeMe123!'),
   ADMIN_NAME: z.string().default('Admin'),
 });
