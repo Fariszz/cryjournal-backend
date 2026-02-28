@@ -15,9 +15,17 @@ import type { FastifyRequest } from 'fastify';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
+  TradeAttachmentIdParamDto,
+  tradeAttachmentIdParamSchema,
+  TradeBulkDto,
   tradeBulkSchema,
+  TradeCreateDto,
   tradeCreateSchema,
+  TradeIdParamDto,
+  tradeIdParamSchema,
+  TradeListQueryDto,
   tradeListQuerySchema,
+  TradeUpdateDto,
   tradeUpdateSchema,
 } from './trades.schemas';
 import { TradesService } from './trades.service';
@@ -28,36 +36,27 @@ export class TradesController {
 
   @Post('trades')
   @UsePipes(new ZodValidationPipe(tradeCreateSchema))
-  async create(@Body() body: unknown) {
-    const data = await this.tradesService.create(body as never);
+  async create(@Body() body: TradeCreateDto) {
+    const data = await this.tradesService.create(body);
     return { data };
   }
 
   @Put('trades/:id')
-  @UsePipes(new ZodValidationPipe(tradeUpdateSchema))
-  async update(@Param('id') id: string, @Body() body: unknown) {
-    const data = await this.tradesService.update(id, body as never);
+  @UsePipes(
+    new ZodValidationPipe(tradeIdParamSchema),
+    new ZodValidationPipe(tradeUpdateSchema),
+  )
+  async update(
+    @Param() params: TradeIdParamDto,
+    @Body() body: TradeUpdateDto,
+  ) {
+    const data = await this.tradesService.update(params.id, body);
     return { data };
   }
 
   @Get('trades')
   @UsePipes(new ZodValidationPipe(tradeListQuerySchema))
-  async list(
-    @Query()
-    query: {
-      account_id?: string;
-      instrument_id?: string;
-      strategy_id?: string;
-      type?: 'executed' | 'missed';
-      date_from?: string;
-      date_to?: string;
-      session?: string;
-      tags?: string;
-      demons?: string;
-      page: number;
-      page_size: number;
-    },
-  ) {
+  async list(@Query() query: TradeListQueryDto) {
     const data = await this.tradesService.list({
       accountId: query.account_id,
       instrumentId: query.instrument_id,
@@ -78,15 +77,16 @@ export class TradesController {
   }
 
   @Get('trades/:id')
-  async get(@Param('id') id: string) {
-    const data = await this.tradesService.getById(id);
+  @UsePipes(new ZodValidationPipe(tradeIdParamSchema))
+  async get(@Param() params: TradeIdParamDto) {
+    const data = await this.tradesService.getById(params.id);
     return { data };
   }
 
   @Post('trades/bulk')
   @UsePipes(new ZodValidationPipe(tradeBulkSchema))
-  async bulk(@Body() body: unknown) {
-    const data = await this.tradesService.bulkUpdate(body as never);
+  async bulk(@Body() body: TradeBulkDto) {
+    const data = await this.tradesService.bulkUpdate(body);
     return { data };
   }
 
@@ -108,15 +108,18 @@ export class TradesController {
         message: 'File too large',
       });
     }
-    const tradeId = String(filePart.fields?.trade_id?.value ?? '');
+    const fields = filePart.fields as
+      | Record<string, { value?: unknown } | undefined>
+      | undefined;
+    const tradeId = String(fields?.trade_id?.value ?? '');
     if (!tradeId) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
         message: 'trade_id is required',
       });
     }
-    const caption = filePart.fields?.caption?.value
-      ? String(filePart.fields.caption.value)
+    const caption = fields?.caption?.value
+      ? String(fields.caption.value)
       : undefined;
     const data = await this.tradesService.addAttachment(
       tradeId,
@@ -131,8 +134,9 @@ export class TradesController {
   }
 
   @Delete('trade-attachments/:id')
-  async deleteAttachment(@Param('id') id: string) {
-    const data = await this.tradesService.deleteAttachment(id);
+  @UsePipes(new ZodValidationPipe(tradeAttachmentIdParamSchema))
+  async deleteAttachment(@Param() params: TradeAttachmentIdParamDto) {
+    const data = await this.tradesService.deleteAttachment(params.id);
     return { data };
   }
 }

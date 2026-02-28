@@ -8,10 +8,10 @@ import { and, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
 import { env } from '../../common/config/env';
 import {
   STORAGE_PROVIDER,
-  StorageProvider,
 } from '../../common/storage/storage.provider';
+import type { StorageProvider } from '../../common/storage/storage.provider';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import {
   accounts,
   strategyConfluences,
@@ -32,6 +32,11 @@ import {
   computeRMultiple,
   computeWinLossFlag,
 } from './trade-metrics.util';
+import type {
+  TradeBulkDto,
+  TradeCreateDto,
+  TradeUpdateDto,
+} from './trades.schemas';
 
 interface TradeInput {
   accountId: string;
@@ -75,7 +80,7 @@ export class TradesService {
     private readonly strategiesService: StrategiesService,
   ) {}
 
-  async create(input: TradeInput) {
+  async create(input: TradeCreateDto) {
     const account = await this.validateTradeInput(input);
 
     const metricInput = this.buildMetricInput(input);
@@ -126,7 +131,7 @@ export class TradesService {
     );
     const decisionQuality = computeDecisionQualityScore(
       checks.map((row) => ({
-        checked: row.checked,
+        checked: Boolean(row.checked),
         weight: Number(row.weightSnapshot),
       })),
     );
@@ -148,7 +153,7 @@ export class TradesService {
     };
   }
 
-  async update(id: string, input: Partial<TradeInput>) {
+  async update(id: string, input: TradeUpdateDto) {
     const existing = await this.mustGetTrade(id);
 
     const merged: TradeInput = {
@@ -157,7 +162,6 @@ export class TradesService {
       instrumentId: input.instrumentId ?? existing.instrumentId,
       direction: input.direction ?? existing.direction,
       timezone: input.timezone ?? existing.timezone,
-      entryDatetime: new Date(existing.entryDatetime).toISOString(),
       ...input,
       entryDatetime:
         input.entryDatetime ?? new Date(existing.entryDatetime).toISOString(),
@@ -223,7 +227,7 @@ export class TradesService {
       );
       const score = computeDecisionQualityScore(
         checks.map((row) => ({
-          checked: row.checked,
+          checked: Boolean(row.checked),
           weight: Number(row.weightSnapshot),
         })),
       );
@@ -345,11 +349,7 @@ export class TradesService {
     };
   }
 
-  async bulkUpdate(input: {
-    tradeIds: string[];
-    strategyId?: string;
-    tagIds?: string[];
-  }) {
+  async bulkUpdate(input: TradeBulkDto) {
     if (input.strategyId) {
       await this.db
         .update(trades)

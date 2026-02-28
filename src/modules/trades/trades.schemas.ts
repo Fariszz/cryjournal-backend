@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const tradeBaseSchema = z.object({
@@ -79,3 +80,25 @@ export const tradeBulkSchema = z.object({
   strategyId: z.string().uuid().optional(),
   tagIds: z.array(z.string().uuid()).optional(),
 });
+
+export const tradeIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const tradeAttachmentIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export class TradeCreateDto extends createZodDto(tradeCreateSchema) {}
+
+export class TradeUpdateDto extends createZodDto(tradeUpdateSchema) {}
+
+export class TradeListQueryDto extends createZodDto(tradeListQuerySchema) {}
+
+export class TradeBulkDto extends createZodDto(tradeBulkSchema) {}
+
+export class TradeIdParamDto extends createZodDto(tradeIdParamSchema) {}
+
+export class TradeAttachmentIdParamDto extends createZodDto(
+  tradeAttachmentIdParamSchema,
+) {}
