@@ -9,8 +9,12 @@ import {
 } from '@nestjs/common';
 
 import {
+  AttachContextEventDto,
   attachContextEventSchema,
+  EconomicCalendarQueryDto,
   economicCalendarQuerySchema,
+  TradeIdParamDto,
+  tradeIdParamSchema,
 } from './economic-calendar.schemas';
 import { EconomicCalendarService } from './economic-calendar.service';
 import { ZodValidationPipe } from '@common/validation/zod-validation.pipe';
@@ -23,35 +27,22 @@ export class EconomicCalendarController {
 
   @Get('economic-calendar')
   @UsePipes(new ZodValidationPipe(economicCalendarQuerySchema))
-  async getEvents(
-    @Query()
-    query: {
-      from: string;
-      to: string;
-      impact?: string;
-      currency?: string;
-    },
-  ) {
+  async getEvents(@Query() query: EconomicCalendarQueryDto) {
     const data = await this.economicCalendarService.getEvents(query);
     return { data };
   }
 
   @Post('trades/:id/context-events')
-  @UsePipes(new ZodValidationPipe(attachContextEventSchema))
+  @UsePipes(
+    new ZodValidationPipe(tradeIdParamSchema),
+    new ZodValidationPipe(attachContextEventSchema),
+  )
   async attach(
-    @Param('id') id: string,
-    @Body()
-    body: {
-      providerEventId: string;
-      title: string;
-      impact?: string;
-      currency?: string;
-      eventTime: string;
-      raw?: Record<string, unknown>;
-    },
+    @Param() params: TradeIdParamDto,
+    @Body() body: AttachContextEventDto,
   ) {
     const data = await this.economicCalendarService.attachEventToTrade(
-      id,
+      params.id,
       body,
     );
     return { data };

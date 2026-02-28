@@ -1,12 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
-import { DB } from '../../db/client';
+import type { DB } from '../../db/client';
 import { tradeContextEvents } from '../../db/schema';
 import {
   ECONOMIC_CALENDAR_PROVIDER,
-  EconomicCalendarProvider,
 } from './economic-calendar.provider';
+import type { EconomicCalendarProvider } from './economic-calendar.provider';
+import type {
+  AttachContextEventDto,
+  EconomicCalendarQueryDto,
+} from './economic-calendar.schemas';
 
 @Injectable()
 export class EconomicCalendarService {
@@ -21,12 +25,7 @@ export class EconomicCalendarService {
     private readonly provider: EconomicCalendarProvider,
   ) {}
 
-  async getEvents(input: {
-    from: string;
-    to: string;
-    impact?: string;
-    currency?: string;
-  }) {
+  async getEvents(input: EconomicCalendarQueryDto) {
     const key = JSON.stringify(input);
     const cached = this.cache.get(key);
     const now = Date.now();
@@ -43,14 +42,7 @@ export class EconomicCalendarService {
 
   async attachEventToTrade(
     tradeId: string,
-    input: {
-      providerEventId: string;
-      title: string;
-      impact?: string;
-      currency?: string;
-      eventTime: string;
-      raw?: Record<string, unknown>;
-    },
+    input: AttachContextEventDto,
   ) {
     const [created] = await this.db
       .insert(tradeContextEvents)

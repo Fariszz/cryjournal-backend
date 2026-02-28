@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const economicCalendarQuerySchema = z.object({
@@ -15,3 +16,17 @@ export const attachContextEventSchema = z.object({
   eventTime: z.string().datetime(),
   raw: z.record(z.string(), z.unknown()).optional(),
 });
+
+export const tradeIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export class EconomicCalendarQueryDto extends createZodDto(
+  economicCalendarQuerySchema,
+) {}
+
+export class AttachContextEventDto extends createZodDto(
+  attachContextEventSchema,
+) {}
+
+export class TradeIdParamDto extends createZodDto(tradeIdParamSchema) {}
