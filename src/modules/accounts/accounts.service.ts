@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
-import { AccountCreateInput, AccountUpdateInput } from './accounts.schemas';
+import type {
+  AccountCreateDto,
+  AccountGroupCreateDto,
+  AccountGroupUpdateDto,
+  AccountUpdateDto,
+} from './accounts.schemas';
 import type { DB } from '@db/client';
 import { InjectDb } from '@db/db.provider';
-import { accountGroups } from '@db/schema';
+import { accountGroups, accounts } from '@db/schema';
 
 @Injectable()
 export class AccountsService {
@@ -13,7 +18,7 @@ export class AccountsService {
     return await this.db.select().from(accountGroups);
   }
 
-  async createGroup(input: { name: string; description?: string }) {
+  async createGroup(input: AccountGroupCreateDto) {
     const [created] = await this.db
       .insert(accountGroups)
       .values(input)
@@ -23,7 +28,7 @@ export class AccountsService {
 
   async updateGroup(
     id: string,
-    input: { name?: string; description?: string },
+    input: AccountGroupUpdateDto,
   ) {
     const [updated] = await this.db
       .update(accountGroups)
@@ -43,7 +48,7 @@ export class AccountsService {
     return updated;
   }
 
-  async createAccount(input: AccountCreateInput) {
+  async createAccount(input: AccountCreateDto) {
     const [created] = await this.db
       .insert(accounts)
       .values({
@@ -93,7 +98,7 @@ export class AccountsService {
     return this.db.select().from(accounts).where(isNull(accounts.deletedAt));
   }
 
-  async updateAccount(id: string, input: AccountUpdateInput) {
+  async updateAccount(id: string, input: AccountUpdateDto) {
     const [updated] = await this.db
       .update(accounts)
       .set({

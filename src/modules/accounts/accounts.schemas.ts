@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const accountGroupCreateSchema = z.object({
@@ -31,6 +32,34 @@ export const accountListSchema = z.object({
   group_id: z.string().uuid().optional(),
   archived: z.enum(['true', 'false']).optional(),
 });
+
+export const accountGroupIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const accountIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export class AccountGroupCreateDto extends createZodDto(
+  accountGroupCreateSchema,
+) {}
+
+export class AccountGroupUpdateDto extends createZodDto(
+  accountGroupUpdateSchema,
+) {}
+
+export class AccountCreateDto extends createZodDto(accountCreateSchema) {}
+
+export class AccountUpdateDto extends createZodDto(accountUpdateSchema) {}
+
+export class AccountListQueryDto extends createZodDto(accountListSchema) {}
+
+export class AccountGroupIdParamDto extends createZodDto(
+  accountGroupIdParamSchema,
+) {}
+
+export class AccountIdParamDto extends createZodDto(accountIdParamSchema) {}
 
 export type AccountCreateInput = z.infer<typeof accountCreateSchema>;
 export type AccountUpdateInput = z.infer<typeof accountUpdateSchema>;
