@@ -1,9 +1,7 @@
-import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { hashPassword } from '../../src/common/auth/password.util';
 import * as schema from '../../src/db/schema';
-
-const SALT_ROUNDS = 10;
 
 type SeedDatabase = NodePgDatabase<typeof schema>;
 type TransactionCallback = Parameters<SeedDatabase['transaction']>[0];
@@ -33,7 +31,7 @@ export async function seedAdmin(
     .where(eq(schema.users.email, env.ADMIN_EMAIL))
     .limit(1);
 
-  const passwordHash = await bcrypt.hash(env.ADMIN_PASSWORD, SALT_ROUNDS);
+  const passwordHash = await hashPassword(env.ADMIN_PASSWORD);
 
   if (!existingAdmin) {
     const [insertedAdmin] = await tx
