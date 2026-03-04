@@ -6,6 +6,4 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-export type LoginInput = z.infer<typeof loginSchema>;
-
 export class LoginDto extends createZodDto(loginSchema) {}

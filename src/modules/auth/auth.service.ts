@@ -34,6 +34,12 @@ export class AuthService {
         message: 'Invalid email or password',
       });
     }
+    if (!user.isActive) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'User is inactive',
+      });
+    }
 
     const now = new Date();
     if (user.lockedUntil && user.lockedUntil > now) {
