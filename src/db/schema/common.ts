@@ -2,7 +2,6 @@ import {
   date,
   integer,
   numeric,
-  pgTable,
   timestamp,
   uuid,
   varchar,
@@ -25,17 +24,6 @@ export const numericRatio = (name: string) =>
   numeric(name, { precision: 12, scale: 6 });
 
 export const metricDate = (name: string) => date(name, { mode: 'string' });
-
-export const tableWithTimestamps = (
-  name: string,
-  columns: Parameters<typeof pgTable>[1],
-) => {
-  return pgTable(name, {
-    ...columns,
-    createdAt: createdAt(),
-    updatedAt: updatedAt(),
-  });
-};
 
 export const lockoutColumns = () => ({
   failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
