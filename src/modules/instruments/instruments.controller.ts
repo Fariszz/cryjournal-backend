@@ -19,7 +19,7 @@ export class InstrumentsController {
   @Post()
   @UsePipes(new ZodValidationPipe(instrumentCreateSchema))
   async create(@Body() body: InstrumentCreateDto) {
-    const data = await this.instrumentsService.create(body as never);
+    const data = await this.instrumentsService.create(body);
     return { data };
   }
 }
