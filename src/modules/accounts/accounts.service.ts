@@ -15,7 +15,7 @@ export class AccountsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
   async listGroups() {
-    return await this.db.select().from(accountGroups);
+    return this.db.select().from(accountGroups);
   }
 
   async createGroup(input: AccountGroupCreateDto) {
@@ -61,7 +61,10 @@ export class AccountsService {
     return created;
   }
 
-  async listAccounts(query: { groupId?: string; archived?: boolean }) {
+  async listAccounts(query: {
+    groupId?: string | undefined;
+    archived?: boolean | undefined;
+  }) {
     if (query.groupId && query.archived === undefined) {
       return this.db
         .select()

@@ -60,6 +60,3 @@ export class AccountGroupIdParamDto extends createZodDto(
 ) {}
 
 export class AccountIdParamDto extends createZodDto(accountIdParamSchema) {}
-
-export type AccountCreateInput = z.infer<typeof accountCreateSchema>;
-export type AccountUpdateInput = z.infer<typeof accountUpdateSchema>;
