@@ -11,7 +11,9 @@ import {
   Req,
   UsePipes,
 } from '@nestjs/common';
+import type { Multipart, MultipartFile } from '@fastify/multipart';
 import type { FastifyRequest } from 'fastify';
+import { z } from 'zod';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
@@ -27,6 +29,36 @@ import {
   journalUpdateSchema,
 } from './journals.schemas';
 import { JournalsService } from './journals.service';
+
+const journalAttachmentFieldsSchema = z.object({
+  journal_id: z.preprocess(
+    (value) => (value === undefined || value === null ? '' : String(value)),
+    z.string().uuid(),
+  ),
+  caption: z.preprocess(
+    (value) =>
+      value === undefined || value === null || String(value).trim() === ''
+        ? undefined
+        : String(value),
+    z.string().optional(),
+  ),
+});
+
+function hasMultipartFile(
+  req: FastifyRequest,
+): req is FastifyRequest & { file: () => Promise<MultipartFile | undefined> } {
+  return typeof (req as { file?: unknown }).file === 'function';
+}
+
+function readMultipartField(
+  field: Multipart | Multipart[] | undefined,
+): unknown {
+  const value = Array.isArray(field) ? field[0] : field;
+  if (!value || !('value' in value)) {
+    return undefined;
+  }
+  return value.value;
+}
 
 @Controller()
 export class JournalsController {
@@ -77,9 +109,14 @@ export class JournalsController {
 
   @Post('daily-journal-attachments')
   async uploadAttachment(@Req() req: FastifyRequest) {
-    const filePart = await (
-      req as FastifyRequest & { file?: () => Promise<any> }
-    ).file?.();
+    if (!hasMultipartFile(req)) {
+      throw new BadRequestException({
+        error: 'VALIDATION_ERROR',
+        message: 'Multipart file upload is not available',
+      });
+    }
+
+    const filePart = await req.file();
     if (!filePart) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
@@ -93,27 +130,28 @@ export class JournalsController {
         message: 'File too large',
       });
     }
-    const fields = filePart.fields as
-      | Record<string, { value?: unknown } | undefined>
-      | undefined;
-    const journalId = String(fields?.journal_id?.value ?? '');
-    if (!journalId) {
+
+    const parsedFields = journalAttachmentFieldsSchema.safeParse({
+      journal_id: readMultipartField(filePart.fields.journal_id),
+      caption: readMultipartField(filePart.fields.caption),
+    });
+    if (!parsedFields.success) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
-        message: 'journal_id is required',
+        message: parsedFields.error.issues
+          .map((issue) => issue.message)
+          .join(', '),
       });
     }
-    const caption = fields?.caption?.value
-      ? String(fields.caption.value)
-      : undefined;
+
     const data = await this.journalsService.addAttachment(
-      journalId,
+      parsedFields.data.journal_id,
       {
         filename: filePart.filename,
         mimetype: filePart.mimetype,
         data: buffer,
       },
-      caption,
+      parsedFields.data.caption,
     );
     return { data };
   }
