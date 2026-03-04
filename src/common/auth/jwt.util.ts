@@ -1,9 +1,14 @@
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
+import { z } from 'zod';
 
-type JwtPayload = Record<string, unknown> & {
-  exp: number;
-  iat: number;
-};
+const jwtPayloadSchema = z
+  .object({
+    exp: z.number().int().positive(),
+    iat: z.number().int().nonnegative(),
+  })
+  .catchall(z.unknown());
+
+type JwtPayload = z.infer<typeof jwtPayloadSchema>;
 
 function toBase64Url(input: Buffer | string): string {
   return Buffer.from(input)
@@ -51,15 +56,16 @@ export function verifyJwt(token: string, secret: string): JwtPayload {
   const expected = createHmac('sha256', secret).update(content).digest();
   const actual = fromBase64Url(encodedSignature);
 
-  if (expected.length !== actual.length || !expected.equals(actual)) {
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
     throw new Error('Invalid token signature');
   }
 
-  const payload = JSON.parse(
+  const parsedPayload: unknown = JSON.parse(
     fromBase64Url(encodedPayload).toString('utf8'),
-  ) as JwtPayload;
+  );
+  const payload = jwtPayloadSchema.parse(parsedPayload);
   const now = Math.floor(Date.now() / 1000);
-  if (!payload.exp || payload.exp < now) {
+  if (payload.exp < now) {
     throw new Error('Token expired');
   }
   return payload;
