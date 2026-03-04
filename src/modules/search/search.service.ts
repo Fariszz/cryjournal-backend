@@ -15,7 +15,18 @@ export class SearchService {
   constructor(@InjectDb() private readonly db: DB) {}
 
   async search(query: string) {
-    const pattern = `%${query}%`;
+    const normalizedQuery = query.trim();
+    if (normalizedQuery.length < 2) {
+      return {
+        instruments: [],
+        tags: [],
+        strategies: [],
+        demons: [],
+        notes: [],
+      };
+    }
+
+    const pattern = `%${normalizedQuery}%`;
 
     const [instrumentRows, tagRows, strategyRows, demonRows, tradeRows] =
       await Promise.all([
