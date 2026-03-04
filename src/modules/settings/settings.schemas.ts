@@ -19,5 +19,3 @@ export const updateSettingsSchema = z.object({
 });
 
 export class UpdateSettingsDto extends createZodDto(updateSettingsSchema) {}
-
-export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
