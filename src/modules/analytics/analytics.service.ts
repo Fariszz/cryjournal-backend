@@ -26,7 +26,11 @@ function maxDrawdown(values: number[]): number {
 export class AnalyticsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async home(input: { dateFrom: string; dateTo: string; accountId?: string }) {
+  async home(input: {
+    dateFrom: string;
+    dateTo: string;
+    accountId?: string | undefined;
+  }) {
     const conditions = [
       eq(trades.type, 'executed'),
       isNull(trades.deletedAt),
@@ -162,11 +166,11 @@ export class AnalyticsService {
         tradesCount: sql<number>`count(*)`,
         executedCount: sql<number>`coalesce(sum(case when ${trades.type} = 'executed' then 1 else 0 end), 0)`,
         missedCount: sql<number>`coalesce(sum(case when ${trades.type} = 'missed' then 1 else 0 end), 0)`,
-        netPnl: sql<string>`coalesce(sum(${trades.pnl}), 0)`,
+        netPnl: sql<string>`coalesce(sum(case when ${trades.type} = 'executed' then ${trades.pnl} else 0 end), 0)`,
         wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = 'win' then 1 else 0 end), 0)`,
-        avgR: sql<string>`coalesce(avg(${trades.rMultiple}), 0)`,
-        grossProfit: sql<string>`coalesce(sum(case when ${trades.pnl} > 0 then ${trades.pnl} else 0 end), 0)`,
-        grossLoss: sql<string>`coalesce(sum(case when ${trades.pnl} < 0 then ${trades.pnl} else 0 end), 0)`,
+        avgR: sql<string>`coalesce(avg(case when ${trades.type} = 'executed' then ${trades.rMultiple} end), 0)`,
+        grossProfit: sql<string>`coalesce(sum(case when ${trades.type} = 'executed' and ${trades.pnl} > 0 then ${trades.pnl} else 0 end), 0)`,
+        grossLoss: sql<string>`coalesce(sum(case when ${trades.type} = 'executed' and ${trades.pnl} < 0 then ${trades.pnl} else 0 end), 0)`,
       })
       .from(trades)
       .where(where);
@@ -178,7 +182,7 @@ export class AnalyticsService {
         trades: sql<number>`count(*)`,
       })
       .from(trades)
-      .where(where)
+      .where(and(where, eq(trades.type, 'executed')))
       .groupBy(sql`date(${trades.entryDatetime})`)
       .orderBy(asc(sql`date(${trades.entryDatetime})`));
 
@@ -349,7 +353,7 @@ export class AnalyticsService {
     }));
   }
 
-  async accountPnlCalendar(id: string, input: { month?: string }) {
+  async accountPnlCalendar(id: string, input: { month?: string | undefined }) {
     const month = input.month ?? new Date().toISOString().slice(0, 7);
     const rows = await this.db
       .select({
@@ -362,6 +366,7 @@ export class AnalyticsService {
         and(
           eq(trades.accountId, id),
           isNull(trades.deletedAt),
+          eq(trades.type, 'executed'),
           sql`to_char(${trades.entryDatetime}, 'YYYY-MM') = ${month}`,
         ),
       )
