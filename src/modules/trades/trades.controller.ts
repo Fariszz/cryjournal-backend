@@ -11,7 +11,9 @@ import {
   Req,
   UsePipes,
 } from '@nestjs/common';
+import type { Multipart, MultipartFile } from '@fastify/multipart';
 import type { FastifyRequest } from 'fastify';
+import { z } from 'zod';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
@@ -29,6 +31,36 @@ import {
   tradeUpdateSchema,
 } from './trades.schemas';
 import { TradesService } from './trades.service';
+
+const tradeAttachmentFieldsSchema = z.object({
+  trade_id: z.preprocess(
+    (value) => (value === undefined || value === null ? '' : String(value)),
+    z.string().uuid(),
+  ),
+  caption: z.preprocess(
+    (value) =>
+      value === undefined || value === null || String(value).trim() === ''
+        ? undefined
+        : String(value),
+    z.string().optional(),
+  ),
+});
+
+function hasMultipartFile(
+  req: FastifyRequest,
+): req is FastifyRequest & { file: () => Promise<MultipartFile | undefined> } {
+  return typeof (req as { file?: unknown }).file === 'function';
+}
+
+function readMultipartField(
+  field: Multipart | Multipart[] | undefined,
+): unknown {
+  const value = Array.isArray(field) ? field[0] : field;
+  if (!value || !('value' in value)) {
+    return undefined;
+  }
+  return value.value;
+}
 
 @Controller()
 export class TradesController {
@@ -89,9 +121,14 @@ export class TradesController {
 
   @Post('trade-attachments')
   async uploadAttachment(@Req() req: FastifyRequest) {
-    const filePart = await (
-      req as FastifyRequest & { file?: () => Promise<any> }
-    ).file?.();
+    if (!hasMultipartFile(req)) {
+      throw new BadRequestException({
+        error: 'VALIDATION_ERROR',
+        message: 'Multipart file upload is not available',
+      });
+    }
+
+    const filePart = await req.file();
     if (!filePart) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
@@ -105,27 +142,28 @@ export class TradesController {
         message: 'File too large',
       });
     }
-    const fields = filePart.fields as
-      | Record<string, { value?: unknown } | undefined>
-      | undefined;
-    const tradeId = String(fields?.trade_id?.value ?? '');
-    if (!tradeId) {
+
+    const parsedFields = tradeAttachmentFieldsSchema.safeParse({
+      trade_id: readMultipartField(filePart.fields.trade_id),
+      caption: readMultipartField(filePart.fields.caption),
+    });
+    if (!parsedFields.success) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
-        message: 'trade_id is required',
+        message: parsedFields.error.issues
+          .map((issue) => issue.message)
+          .join(', '),
       });
     }
-    const caption = fields?.caption?.value
-      ? String(fields.caption.value)
-      : undefined;
+
     const data = await this.tradesService.addAttachment(
-      tradeId,
+      parsedFields.data.trade_id,
       {
         filename: filePart.filename,
         mimetype: filePart.mimetype,
         data: buffer,
       },
-      caption,
+      parsedFields.data.caption,
     );
     return { data };
   }

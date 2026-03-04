@@ -5,14 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { and, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
-import { env } from '../../common/config/env';
 import { STORAGE_PROVIDER } from '../../common/storage/storage.provider';
 import type { StorageProvider } from '../../common/storage/storage.provider';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import {
   accounts,
-  strategyConfluences,
   tradeAttachments,
   tradeConfluenceChecks,
   tradeDemonPivot,
@@ -43,32 +41,41 @@ interface TradeInput {
   direction: 'long' | 'short';
   timezone: string;
   entryDatetime: string;
-  exitDatetime?: string;
-  entryTimeframe?: string;
-  tradingSession?: string;
-  entryPrice?: number;
-  exitPrice?: number;
-  stopLoss?: number;
-  takeProfit?: number;
-  dollarRisk?: number;
-  positionSize?: number;
-  positionSizeUnit?: 'lot' | 'usd' | 'contract';
-  brokerCommission?: number;
-  swap?: number;
-  fundingFee?: number;
-  positionType?: 'spot' | 'futures';
-  leverage?: number;
-  marginMode?: 'cross' | 'isolated';
-  strategyId?: string;
-  thesis?: string;
-  postAnalysis?: string;
-  notes?: string;
-  tagIds?: string[];
-  demonIds?: string[];
-  marketConditionTagIds?: string[];
-  marketConditionIds?: string[];
-  confluenceChecks?: Array<{ confluenceId: string; checked: boolean }>;
+  exitDatetime?: string | undefined;
+  entryTimeframe?: string | undefined;
+  tradingSession?: string | undefined;
+  entryPrice?: number | undefined;
+  exitPrice?: number | undefined;
+  stopLoss?: number | undefined;
+  takeProfit?: number | undefined;
+  dollarRisk?: number | undefined;
+  positionSize?: number | undefined;
+  positionSizeUnit?: 'lot' | 'usd' | 'contract' | undefined;
+  brokerCommission?: number | undefined;
+  swap?: number | undefined;
+  fundingFee?: number | undefined;
+  positionType?: 'spot' | 'futures' | undefined;
+  leverage?: number | undefined;
+  marginMode?: 'cross' | 'isolated' | undefined;
+  strategyId?: string | undefined;
+  thesis?: string | undefined;
+  postAnalysis?: string | undefined;
+  notes?: string | undefined;
+  tagIds?: string[] | undefined;
+  demonIds?: string[] | undefined;
+  marketConditionTagIds?: string[] | undefined;
+  marketConditionIds?: string[] | undefined;
+  confluenceChecks?:
+    | Array<{ confluenceId: string; checked: boolean }>
+    | undefined;
 }
+
+type DbTransaction = Parameters<DB['transaction']>[0] extends (
+  tx: infer TTx,
+) => unknown
+  ? TTx
+  : never;
+type DbExecutor = DB | DbTransaction;
 
 @Injectable()
 export class TradesService {
@@ -79,197 +86,244 @@ export class TradesService {
   ) {}
 
   async create(input: TradeCreateDto) {
-    const account = await this.validateTradeInput(input);
-
-    const metricInput = this.buildMetricInput(input);
-    const baseMetrics = this.computeMetrics(metricInput);
-    const [created] = await this.db
-      .insert(trades)
-      .values({
-        accountId: input.accountId,
-        type: input.type,
-        instrumentId: input.instrumentId,
-        direction: input.direction,
-        timezone: input.timezone,
-        entryDatetime: new Date(input.entryDatetime),
-        exitDatetime: input.exitDatetime
-          ? new Date(input.exitDatetime)
-          : undefined,
-        entryTimeframe: input.entryTimeframe,
-        tradingSession: input.tradingSession,
-        entryPrice: input.entryPrice?.toString(),
-        exitPrice: input.exitPrice?.toString(),
-        stopLoss: input.stopLoss?.toString(),
-        takeProfit: input.takeProfit?.toString(),
-        dollarRisk: input.dollarRisk?.toString(),
-        positionSize: input.positionSize?.toString(),
-        positionSizeUnit: input.positionSizeUnit,
-        brokerCommission: input.brokerCommission?.toString(),
-        swap: input.swap?.toString(),
-        fundingFee: input.fundingFee?.toString(),
-        positionType: input.positionType,
-        leverage: input.leverage?.toString(),
-        marginMode: input.marginMode,
-        strategyId: input.strategyId,
-        thesis: input.thesis,
-        postAnalysis: input.postAnalysis,
-        notes: input.notes,
-        pnl: baseMetrics.pnl?.toString(),
-        rMultiple: baseMetrics.rMultiple?.toString(),
-        winLossFlag: baseMetrics.winLossFlag,
-        holdingTimeSeconds: baseMetrics.holdingTimeSeconds,
-        holdingBucket: baseMetrics.holdingBucket,
-      })
-      .returning();
-
-    const checks = await this.syncConfluenceChecks(
-      created.id,
-      input.strategyId,
-      input.confluenceChecks,
-    );
-    const decisionQuality = computeDecisionQualityScore(
-      checks.map((row) => ({
-        checked: Boolean(row.checked),
-        weight: Number(row.weightSnapshot),
-      })),
-    );
-    if (decisionQuality !== null) {
-      await this.db
-        .update(trades)
-        .set({
-          decisionQualityScore: decisionQuality.toString(),
-          updatedAt: new Date(),
+    const result = await this.db.transaction(async (tx) => {
+      const account = await this.validateTradeInput(input, tx);
+      const metricInput = this.buildMetricInput(input);
+      const baseMetrics = this.computeMetrics(metricInput);
+      const [created] = await tx
+        .insert(trades)
+        .values({
+          accountId: input.accountId,
+          type: input.type,
+          instrumentId: input.instrumentId,
+          direction: input.direction,
+          timezone: input.timezone,
+          entryDatetime: new Date(input.entryDatetime),
+          exitDatetime: input.exitDatetime
+            ? new Date(input.exitDatetime)
+            : undefined,
+          entryTimeframe: input.entryTimeframe,
+          tradingSession: input.tradingSession,
+          entryPrice: input.entryPrice?.toString(),
+          exitPrice: input.exitPrice?.toString(),
+          stopLoss: input.stopLoss?.toString(),
+          takeProfit: input.takeProfit?.toString(),
+          dollarRisk: input.dollarRisk?.toString(),
+          positionSize: input.positionSize?.toString(),
+          positionSizeUnit: input.positionSizeUnit,
+          brokerCommission: input.brokerCommission?.toString(),
+          swap: input.swap?.toString(),
+          fundingFee: input.fundingFee?.toString(),
+          positionType: input.positionType,
+          leverage: input.leverage?.toString(),
+          marginMode: input.marginMode,
+          strategyId: input.strategyId,
+          thesis: input.thesis,
+          postAnalysis: input.postAnalysis,
+          notes: input.notes,
+          pnl: baseMetrics.pnl?.toString(),
+          rMultiple: baseMetrics.rMultiple?.toString(),
+          winLossFlag: baseMetrics.winLossFlag,
+          holdingTimeSeconds: baseMetrics.holdingTimeSeconds,
+          holdingBucket: baseMetrics.holdingBucket,
         })
-        .where(eq(trades.id, created.id));
-    }
+        .returning();
 
-    await this.syncTradeLinks(created.id, input);
-    const trade = await this.getById(created.id);
-    return {
-      trade,
-      warnings: this.buildWarnings(input, account.timezone),
-    };
-  }
-
-  async update(id: string, input: TradeUpdateDto) {
-    const existing = await this.mustGetTrade(id);
-
-    const merged: TradeInput = {
-      accountId: input.accountId ?? existing.accountId,
-      type: input.type ?? existing.type,
-      instrumentId: input.instrumentId ?? existing.instrumentId,
-      direction: input.direction ?? existing.direction,
-      timezone: input.timezone ?? existing.timezone,
-      ...input,
-      entryDatetime:
-        input.entryDatetime ?? new Date(existing.entryDatetime).toISOString(),
-      exitDatetime:
-        input.exitDatetime ??
-        (existing.exitDatetime
-          ? new Date(existing.exitDatetime).toISOString()
-          : undefined),
-    };
-
-    const account = await this.validateTradeInput(merged);
-    const metricInput = this.buildMetricInput(merged);
-    const metrics = this.computeMetrics(metricInput);
-
-    await this.db
-      .update(trades)
-      .set({
-        accountId: merged.accountId,
-        type: merged.type,
-        instrumentId: merged.instrumentId,
-        direction: merged.direction,
-        timezone: merged.timezone,
-        entryDatetime: new Date(merged.entryDatetime),
-        exitDatetime: merged.exitDatetime
-          ? new Date(merged.exitDatetime)
-          : null,
-        entryTimeframe: merged.entryTimeframe,
-        tradingSession: merged.tradingSession,
-        entryPrice: merged.entryPrice?.toString(),
-        exitPrice: merged.exitPrice?.toString(),
-        stopLoss: merged.stopLoss?.toString(),
-        takeProfit: merged.takeProfit?.toString(),
-        dollarRisk: merged.dollarRisk?.toString(),
-        positionSize: merged.positionSize?.toString(),
-        positionSizeUnit: merged.positionSizeUnit,
-        brokerCommission: merged.brokerCommission?.toString(),
-        swap: merged.swap?.toString(),
-        fundingFee: merged.fundingFee?.toString(),
-        positionType: merged.positionType,
-        leverage: merged.leverage?.toString(),
-        marginMode: merged.marginMode,
-        strategyId: merged.strategyId,
-        thesis: merged.thesis,
-        postAnalysis: merged.postAnalysis,
-        notes: merged.notes,
-        pnl: metrics.pnl?.toString(),
-        rMultiple: metrics.rMultiple?.toString(),
-        winLossFlag: metrics.winLossFlag,
-        holdingTimeSeconds: metrics.holdingTimeSeconds,
-        holdingBucket: metrics.holdingBucket,
-        updatedAt: new Date(),
-      })
-      .where(eq(trades.id, id));
-
-    if (
-      input.strategyId !== undefined ||
-      input.confluenceChecks !== undefined
-    ) {
       const checks = await this.syncConfluenceChecks(
-        id,
-        merged.strategyId,
+        created.id,
+        input.strategyId,
         input.confluenceChecks,
+        tx,
       );
-      const score = computeDecisionQualityScore(
+      const decisionQuality = computeDecisionQualityScore(
         checks.map((row) => ({
           checked: Boolean(row.checked),
           weight: Number(row.weightSnapshot),
         })),
       );
-      await this.db
+      if (decisionQuality !== null) {
+        await tx
+          .update(trades)
+          .set({
+            decisionQualityScore: decisionQuality.toString(),
+            updatedAt: new Date(),
+          })
+          .where(eq(trades.id, created.id));
+      }
+
+      await this.syncTradeLinks(created.id, input, tx);
+      return {
+        tradeId: created.id,
+        warnings: this.buildWarnings(input, account.timezone),
+      };
+    });
+
+    const trade = await this.getById(result.tradeId);
+    return {
+      trade,
+      warnings: result.warnings,
+    };
+  }
+
+  async update(id: string, input: TradeUpdateDto) {
+    const result = await this.db.transaction(async (tx) => {
+      const existing = await this.mustGetTrade(id, tx);
+      const parseOptionalNumber = (
+        value: string | null,
+      ): number | undefined => {
+        return value === null ? undefined : Number(value);
+      };
+
+      const merged: TradeInput = {
+        accountId: input.accountId ?? existing.accountId,
+        type: input.type ?? existing.type,
+        instrumentId: input.instrumentId ?? existing.instrumentId,
+        direction: input.direction ?? existing.direction,
+        timezone: input.timezone ?? existing.timezone,
+        entryDatetime:
+          input.entryDatetime ?? new Date(existing.entryDatetime).toISOString(),
+        exitDatetime:
+          input.exitDatetime ??
+          (existing.exitDatetime
+            ? new Date(existing.exitDatetime).toISOString()
+            : undefined),
+        entryTimeframe:
+          input.entryTimeframe ?? existing.entryTimeframe ?? undefined,
+        tradingSession:
+          input.tradingSession ?? existing.tradingSession ?? undefined,
+        entryPrice:
+          input.entryPrice ?? parseOptionalNumber(existing.entryPrice),
+        exitPrice: input.exitPrice ?? parseOptionalNumber(existing.exitPrice),
+        stopLoss: input.stopLoss ?? parseOptionalNumber(existing.stopLoss),
+        takeProfit:
+          input.takeProfit ?? parseOptionalNumber(existing.takeProfit),
+        dollarRisk:
+          input.dollarRisk ?? parseOptionalNumber(existing.dollarRisk),
+        positionSize:
+          input.positionSize ?? parseOptionalNumber(existing.positionSize),
+        positionSizeUnit:
+          input.positionSizeUnit ?? existing.positionSizeUnit ?? undefined,
+        brokerCommission:
+          input.brokerCommission ??
+          parseOptionalNumber(existing.brokerCommission),
+        swap: input.swap ?? parseOptionalNumber(existing.swap),
+        fundingFee:
+          input.fundingFee ?? parseOptionalNumber(existing.fundingFee),
+        positionType: input.positionType ?? existing.positionType ?? undefined,
+        leverage: input.leverage ?? parseOptionalNumber(existing.leverage),
+        marginMode: input.marginMode ?? existing.marginMode ?? undefined,
+        strategyId: input.strategyId ?? existing.strategyId ?? undefined,
+        thesis: input.thesis ?? existing.thesis ?? undefined,
+        postAnalysis: input.postAnalysis ?? existing.postAnalysis ?? undefined,
+        notes: input.notes ?? existing.notes ?? undefined,
+        tagIds: input.tagIds,
+        demonIds: input.demonIds,
+        marketConditionTagIds: input.marketConditionTagIds,
+        marketConditionIds: input.marketConditionIds,
+        confluenceChecks: input.confluenceChecks,
+      };
+
+      const account = await this.validateTradeInput(merged, tx);
+      const metricInput = this.buildMetricInput(merged);
+      const metrics = this.computeMetrics(metricInput);
+
+      await tx
         .update(trades)
         .set({
-          decisionQualityScore: score === null ? null : score.toString(),
+          accountId: merged.accountId,
+          type: merged.type,
+          instrumentId: merged.instrumentId,
+          direction: merged.direction,
+          timezone: merged.timezone,
+          entryDatetime: new Date(merged.entryDatetime),
+          exitDatetime: merged.exitDatetime
+            ? new Date(merged.exitDatetime)
+            : null,
+          entryTimeframe: merged.entryTimeframe,
+          tradingSession: merged.tradingSession,
+          entryPrice: merged.entryPrice?.toString(),
+          exitPrice: merged.exitPrice?.toString(),
+          stopLoss: merged.stopLoss?.toString(),
+          takeProfit: merged.takeProfit?.toString(),
+          dollarRisk: merged.dollarRisk?.toString(),
+          positionSize: merged.positionSize?.toString(),
+          positionSizeUnit: merged.positionSizeUnit,
+          brokerCommission: merged.brokerCommission?.toString(),
+          swap: merged.swap?.toString(),
+          fundingFee: merged.fundingFee?.toString(),
+          positionType: merged.positionType,
+          leverage: merged.leverage?.toString(),
+          marginMode: merged.marginMode,
+          strategyId: merged.strategyId,
+          thesis: merged.thesis,
+          postAnalysis: merged.postAnalysis,
+          notes: merged.notes,
+          pnl: metrics.pnl?.toString(),
+          rMultiple: metrics.rMultiple?.toString(),
+          winLossFlag: metrics.winLossFlag,
+          holdingTimeSeconds: metrics.holdingTimeSeconds,
+          holdingBucket: metrics.holdingBucket,
           updatedAt: new Date(),
         })
         .where(eq(trades.id, id));
-    }
 
-    if (
-      input.tagIds !== undefined ||
-      input.demonIds !== undefined ||
-      input.marketConditionIds !== undefined ||
-      input.marketConditionTagIds !== undefined
-    ) {
-      await this.syncTradeLinks(id, {
-        ...merged,
-        tagIds: input.tagIds ?? [],
-        demonIds: input.demonIds ?? [],
-        marketConditionIds: input.marketConditionIds ?? [],
-        marketConditionTagIds: input.marketConditionTagIds ?? [],
-      });
-    }
+      if (
+        input.strategyId !== undefined ||
+        input.confluenceChecks !== undefined
+      ) {
+        const checks = await this.syncConfluenceChecks(
+          id,
+          merged.strategyId,
+          input.confluenceChecks,
+          tx,
+        );
+        const score = computeDecisionQualityScore(
+          checks.map((row) => ({
+            checked: Boolean(row.checked),
+            weight: Number(row.weightSnapshot),
+          })),
+        );
+        await tx
+          .update(trades)
+          .set({
+            decisionQualityScore: score === null ? null : score.toString(),
+            updatedAt: new Date(),
+          })
+          .where(eq(trades.id, id));
+      }
 
-    const trade = await this.getById(id);
+      if (
+        input.tagIds !== undefined ||
+        input.demonIds !== undefined ||
+        input.marketConditionIds !== undefined ||
+        input.marketConditionTagIds !== undefined
+      ) {
+        await this.syncTradeLinks(id, input, tx);
+      }
+
+      return {
+        tradeId: id,
+        warnings: this.buildWarnings(merged, account.timezone),
+      };
+    });
+
+    const trade = await this.getById(result.tradeId);
     return {
       trade,
-      warnings: this.buildWarnings(merged, account.timezone),
+      warnings: result.warnings,
     };
   }
 
   async list(input: {
-    accountId?: string;
-    instrumentId?: string;
-    strategyId?: string;
-    type?: 'executed' | 'missed';
-    dateFrom?: string;
-    dateTo?: string;
-    session?: string;
-    tags?: string[];
-    demons?: string[];
+    accountId?: string | undefined;
+    instrumentId?: string | undefined;
+    strategyId?: string | undefined;
+    type?: 'executed' | 'missed' | undefined;
+    dateFrom?: string | undefined;
+    dateTo?: string | undefined;
+    session?: string | undefined;
+    tags?: string[] | undefined;
+    demons?: string[] | undefined;
     page: number;
     pageSize: number;
   }) {
@@ -294,6 +348,24 @@ export class TradesService {
     }
     if (input.dateTo) {
       conditions.push(lte(trades.entryDatetime, new Date(input.dateTo)));
+    }
+    if (input.tags && input.tags.length > 0) {
+      conditions.push(
+        sql`exists (
+          select 1 from ${tradeTagPivot}
+          where ${tradeTagPivot.tradeId} = ${trades.id}
+            and ${inArray(tradeTagPivot.tagId, input.tags)}
+        )`,
+      );
+    }
+    if (input.demons && input.demons.length > 0) {
+      conditions.push(
+        sql`exists (
+          select 1 from ${tradeDemonPivot}
+          where ${tradeDemonPivot.tradeId} = ${trades.id}
+            and ${inArray(tradeDemonPivot.demonId, input.demons)}
+        )`,
+      );
     }
 
     const where = and(...conditions);
@@ -447,8 +519,11 @@ export class TradesService {
     };
   }
 
-  private async validateTradeInput(input: TradeInput) {
-    const [account] = await this.db
+  private async validateTradeInput(
+    input: TradeInput,
+    db: DbExecutor = this.db,
+  ) {
+    const [account] = await db
       .select()
       .from(accounts)
       .where(eq(accounts.id, input.accountId));
@@ -488,8 +563,8 @@ export class TradesService {
     return warnings;
   }
 
-  private async mustGetTrade(id: string) {
-    const [trade] = await this.db
+  private async mustGetTrade(id: string, db: DbExecutor = this.db) {
+    const [trade] = await db
       .select()
       .from(trades)
       .where(and(eq(trades.id, id), isNull(trades.deletedAt)));
@@ -502,13 +577,20 @@ export class TradesService {
     return trade;
   }
 
-  private async syncTradeLinks(tradeId: string, input: Partial<TradeInput>) {
+  private async syncTradeLinks(
+    tradeId: string,
+    input: {
+      tagIds?: string[] | undefined;
+      demonIds?: string[] | undefined;
+      marketConditionTagIds?: string[] | undefined;
+      marketConditionIds?: string[] | undefined;
+    },
+    db: DbExecutor = this.db,
+  ) {
     if (input.tagIds !== undefined) {
-      await this.db
-        .delete(tradeTagPivot)
-        .where(eq(tradeTagPivot.tradeId, tradeId));
+      await db.delete(tradeTagPivot).where(eq(tradeTagPivot.tradeId, tradeId));
       if (input.tagIds.length > 0) {
-        await this.db.insert(tradeTagPivot).values(
+        await db.insert(tradeTagPivot).values(
           input.tagIds.map((tagId) => ({
             tradeId,
             tagId,
@@ -518,11 +600,11 @@ export class TradesService {
     }
 
     if (input.demonIds !== undefined) {
-      await this.db
+      await db
         .delete(tradeDemonPivot)
         .where(eq(tradeDemonPivot.tradeId, tradeId));
       if (input.demonIds.length > 0) {
-        await this.db.insert(tradeDemonPivot).values(
+        await db.insert(tradeDemonPivot).values(
           input.demonIds.map((demonId) => ({
             tradeId,
             demonId,
@@ -532,11 +614,11 @@ export class TradesService {
     }
 
     if (input.marketConditionTagIds !== undefined) {
-      await this.db
+      await db
         .delete(tradeMarketConditionTagPivot)
         .where(eq(tradeMarketConditionTagPivot.tradeId, tradeId));
       if (input.marketConditionTagIds.length > 0) {
-        await this.db.insert(tradeMarketConditionTagPivot).values(
+        await db.insert(tradeMarketConditionTagPivot).values(
           input.marketConditionTagIds.map((marketConditionTagId) => ({
             tradeId,
             marketConditionTagId,
@@ -546,11 +628,11 @@ export class TradesService {
     }
 
     if (input.marketConditionIds !== undefined) {
-      await this.db
+      await db
         .delete(tradeMarketConditionPivot)
         .where(eq(tradeMarketConditionPivot.tradeId, tradeId));
       if (input.marketConditionIds.length > 0) {
-        await this.db.insert(tradeMarketConditionPivot).values(
+        await db.insert(tradeMarketConditionPivot).values(
           input.marketConditionIds.map((marketConditionId) => ({
             tradeId,
             marketConditionId,
@@ -564,8 +646,9 @@ export class TradesService {
     tradeId: string,
     strategyId?: string,
     manualChecks?: Array<{ confluenceId: string; checked: boolean }>,
+    db: DbExecutor = this.db,
   ) {
-    await this.db
+    await db
       .delete(tradeConfluenceChecks)
       .where(eq(tradeConfluenceChecks.tradeId, tradeId));
     if (!strategyId) {
@@ -586,8 +669,8 @@ export class TradesService {
       checked: map.get(conf.id) ? 1 : 0,
       weightSnapshot: conf.impactWeight,
     }));
-    await this.db.insert(tradeConfluenceChecks).values(values);
-    return this.db
+    await db.insert(tradeConfluenceChecks).values(values);
+    return db
       .select()
       .from(tradeConfluenceChecks)
       .where(eq(tradeConfluenceChecks.tradeId, tradeId));
