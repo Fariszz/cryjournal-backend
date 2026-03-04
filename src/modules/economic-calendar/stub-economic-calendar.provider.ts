@@ -9,8 +9,8 @@ export class StubEconomicCalendarProvider implements EconomicCalendarProvider {
   async getEvents(input: {
     from: string;
     to: string;
-    impact?: string;
-    currency?: string;
+    impact?: string | undefined;
+    currency?: string | undefined;
   }): Promise<EconomicCalendarEvent[]> {
     return [
       {

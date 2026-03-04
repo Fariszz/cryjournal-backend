@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { tradeContextEvents } from '../../db/schema';
@@ -9,6 +8,9 @@ import type {
   AttachContextEventDto,
   EconomicCalendarQueryDto,
 } from './economic-calendar.schemas';
+
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 500;
 
 @Injectable()
 export class EconomicCalendarService {
@@ -33,8 +35,9 @@ export class EconomicCalendarService {
     const data = await this.provider.getEvents(input);
     this.cache.set(key, {
       data,
-      expiresAt: now + 60 * 60 * 1000,
+      expiresAt: now + ONE_HOUR_MS,
     });
+    this.pruneCache(now);
     return data;
   }
 
@@ -52,5 +55,21 @@ export class EconomicCalendarService {
       })
       .returning();
     return created;
+  }
+
+  private pruneCache(now: number): void {
+    for (const [key, value] of this.cache.entries()) {
+      if (value.expiresAt <= now) {
+        this.cache.delete(key);
+      }
+    }
+
+    while (this.cache.size > MAX_CACHE_ENTRIES) {
+      const oldest = this.cache.keys().next().value;
+      if (!oldest) {
+        break;
+      }
+      this.cache.delete(oldest);
+    }
   }
 }
