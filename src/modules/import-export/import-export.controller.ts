@@ -8,10 +8,18 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import type { MultipartFile } from '@fastify/multipart';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import { ExportQueryDto, exportQuerySchema } from './import-export.schemas';
 import { ImportExportService } from './import-export.service';
+
+function hasMultipartFile(
+  req: FastifyRequest,
+): req is FastifyRequest & { file: () => Promise<MultipartFile | undefined> } {
+  return typeof (req as { file?: unknown }).file === 'function';
+}
 
 @Controller()
 export class ImportExportController {
@@ -19,16 +27,29 @@ export class ImportExportController {
 
   @Post('import/trades')
   async importTrades(@Req() req: FastifyRequest) {
-    const filePart = await (
-      req as FastifyRequest & { file?: () => Promise<any> }
-    ).file?.();
+    if (!hasMultipartFile(req)) {
+      throw new BadRequestException({
+        error: 'VALIDATION_ERROR',
+        message: 'Multipart file upload is not available',
+      });
+    }
+
+    const filePart = await req.file();
     if (!filePart) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
         message: 'Missing CSV file',
       });
     }
+
     const buffer = await filePart.toBuffer();
+    if (buffer.length > env.MAX_UPLOAD_BYTES) {
+      throw new BadRequestException({
+        error: 'VALIDATION_ERROR',
+        message: 'File too large',
+      });
+    }
+
     const content = buffer.toString('utf8');
     const data = await this.importExportService.importTradesCsv(content);
     return { data };

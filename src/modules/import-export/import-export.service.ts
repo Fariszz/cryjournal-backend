@@ -1,11 +1,68 @@
 import { Injectable } from '@nestjs/common';
 import { and, desc, eq, gte, isNull, lte } from 'drizzle-orm';
+import { z } from 'zod';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { accounts, dailyJournals, instruments, trades } from '../../db/schema';
 import { InstrumentsService } from '../instruments/instruments.service';
 import { TradesService } from '../trades/trades.service';
 import { parseCsv, toCsv } from './csv.util';
+
+const optionalNumberSchema = z.preprocess((value) => {
+  if (typeof value === 'string' && value.trim() === '') {
+    return undefined;
+  }
+  return value;
+}, z.coerce.number().optional());
+
+const optionalStringSchema = z.preprocess((value) => {
+  if (typeof value === 'string' && value.trim() === '') {
+    return undefined;
+  }
+  return value;
+}, z.string().optional());
+
+const datetimeStringSchema = z
+  .string()
+  .min(1)
+  .refine((value) => !Number.isNaN(Date.parse(value)), {
+    message: 'must be a valid datetime string',
+  });
+
+const optionalDatetimeStringSchema = z.preprocess((value) => {
+  if (typeof value === 'string' && value.trim() === '') {
+    return undefined;
+  }
+  return value;
+}, datetimeStringSchema.optional());
+
+const csvTradeRowSchema = z.object({
+  account_name: z.string().min(1),
+  symbol: z.string().min(1),
+  category: optionalStringSchema,
+  type: z
+    .string()
+    .optional()
+    .transform((value) => value?.toLowerCase() ?? 'executed')
+    .pipe(z.enum(['executed', 'missed'])),
+  direction: z
+    .string()
+    .optional()
+    .transform((value) => value?.toLowerCase() ?? 'long')
+    .pipe(z.enum(['long', 'short'])),
+  timezone: optionalStringSchema,
+  entry_datetime: datetimeStringSchema,
+  exit_datetime: optionalDatetimeStringSchema,
+  entry_price: optionalNumberSchema,
+  exit_price: optionalNumberSchema,
+  stop_loss: optionalNumberSchema,
+  take_profit: optionalNumberSchema,
+  dollar_risk: optionalNumberSchema,
+  position_size: optionalNumberSchema,
+  notes: optionalStringSchema,
+  entry_timeframe: optionalStringSchema,
+  trading_session: optionalStringSchema,
+});
 
 @Injectable()
 export class ImportExportService {
@@ -22,40 +79,50 @@ export class ImportExportService {
 
     for (const [index, row] of rows.entries()) {
       try {
+        const parsedRow = csvTradeRowSchema.safeParse(row);
+        if (!parsedRow.success) {
+          errors.push({
+            row: index + 2,
+            message: parsedRow.error.issues
+              .map((issue) => issue.message)
+              .join(', '),
+          });
+          continue;
+        }
+        const value = parsedRow.data;
+
         const [account] = await this.db
           .select()
           .from(accounts)
-          .where(eq(accounts.name, row.account_name));
+          .where(eq(accounts.name, value.account_name));
         if (!account) {
-          throw new Error(`Unknown account: ${row.account_name}`);
+          throw new Error(`Unknown account: ${value.account_name}`);
         }
         const instrument = await this.instrumentsService.ensureBySymbol(
-          row.symbol,
-          row.category || 'unknown',
+          value.symbol,
+          value.category ?? 'unknown',
         );
 
-        const timezone = row.timezone || account.timezone || 'Asia/Jakarta';
+        const timezone = value.timezone ?? account.timezone;
         const created = await this.tradesService.create({
           accountId: account.id,
-          type: (row.type as 'executed' | 'missed') ?? 'executed',
+          type: value.type,
           instrumentId: instrument.id,
-          direction: (row.direction as 'long' | 'short') ?? 'long',
+          direction: value.direction,
           timezone,
-          entryDatetime: new Date(row.entry_datetime).toISOString(),
-          exitDatetime: row.exit_datetime
-            ? new Date(row.exit_datetime).toISOString()
+          entryDatetime: new Date(value.entry_datetime).toISOString(),
+          exitDatetime: value.exit_datetime
+            ? new Date(value.exit_datetime).toISOString()
             : undefined,
-          entryPrice: row.entry_price ? Number(row.entry_price) : undefined,
-          exitPrice: row.exit_price ? Number(row.exit_price) : undefined,
-          stopLoss: row.stop_loss ? Number(row.stop_loss) : undefined,
-          takeProfit: row.take_profit ? Number(row.take_profit) : undefined,
-          dollarRisk: row.dollar_risk ? Number(row.dollar_risk) : undefined,
-          positionSize: row.position_size
-            ? Number(row.position_size)
-            : undefined,
-          notes: row.notes || undefined,
-          entryTimeframe: row.entry_timeframe || undefined,
-          tradingSession: row.trading_session || undefined,
+          entryPrice: value.entry_price,
+          exitPrice: value.exit_price,
+          stopLoss: value.stop_loss,
+          takeProfit: value.take_profit,
+          dollarRisk: value.dollar_risk,
+          positionSize: value.position_size,
+          notes: value.notes,
+          entryTimeframe: value.entry_timeframe,
+          tradingSession: value.trading_session,
         });
         imported.push(created.trade.id);
       } catch (error) {
@@ -73,7 +140,10 @@ export class ImportExportService {
     };
   }
 
-  async exportTradesCsv(input: { dateFrom?: string; dateTo?: string }) {
+  async exportTradesCsv(input: {
+    dateFrom?: string | undefined;
+    dateTo?: string | undefined;
+  }) {
     const conditions = [isNull(trades.deletedAt)];
     if (input.dateFrom) {
       conditions.push(gte(trades.entryDatetime, new Date(input.dateFrom)));
@@ -100,10 +170,13 @@ export class ImportExportService {
       .where(and(...conditions))
       .orderBy(desc(trades.entryDatetime));
 
-    return toCsv(rows as Array<Record<string, unknown>>);
+    return toCsv(rows.map((row) => ({ ...row })));
   }
 
-  async exportJournalsCsv(input: { dateFrom?: string; dateTo?: string }) {
+  async exportJournalsCsv(input: {
+    dateFrom?: string | undefined;
+    dateTo?: string | undefined;
+  }) {
     const conditions = [isNull(dailyJournals.deletedAt)];
     if (input.dateFrom) {
       conditions.push(gte(dailyJournals.date, input.dateFrom));
@@ -130,6 +203,6 @@ export class ImportExportService {
       .where(and(...conditions))
       .orderBy(desc(dailyJournals.date));
 
-    return toCsv(rows as Array<Record<string, unknown>>);
+    return toCsv(rows.map((row) => ({ ...row })));
   }
 }
