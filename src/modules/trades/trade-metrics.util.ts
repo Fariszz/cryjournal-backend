@@ -2,16 +2,16 @@ type Direction = 'long' | 'short';
 
 export interface TradeMetricInput {
   direction: Direction;
-  entryPrice?: number;
-  exitPrice?: number;
-  positionSize?: number;
-  dollarRisk?: number;
-  brokerCommission?: number;
-  swap?: number;
-  fundingFee?: number;
+  entryPrice?: number | undefined;
+  exitPrice?: number | undefined;
+  positionSize?: number | undefined;
+  dollarRisk?: number | undefined;
+  brokerCommission?: number | undefined;
+  swap?: number | undefined;
+  fundingFee?: number | undefined;
   entryDatetime: Date;
-  exitDatetime?: Date;
-  confluenceChecks?: Array<{ checked: boolean; weight: number }>;
+  exitDatetime?: Date | undefined;
+  confluenceChecks?: Array<{ checked: boolean; weight: number }> | undefined;
 }
 
 export function computeHoldingSeconds(entry: Date, exit?: Date): number | null {
