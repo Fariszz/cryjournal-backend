@@ -1,3 +1,4 @@
+import { Transactional } from '@nestjs-cls/transactional';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
 import { STORAGE_PROVIDER } from '../../common/storage/storage.provider';
@@ -11,13 +12,6 @@ import {
   dailyJournals,
 } from '../../db/schema';
 import { JournalCreateDto, JournalUpdateDto } from './journals.schemas';
-
-type DbTransaction = Parameters<DB['transaction']>[0] extends (
-  tx: infer TTx,
-) => unknown
-  ? TTx
-  : never;
-type DbExecutor = DB | DbTransaction;
 
 @Injectable()
 export class JournalsService {
@@ -69,32 +63,29 @@ export class JournalsService {
     };
   }
 
+  @Transactional()
   async create(input: JournalCreateDto) {
-    const created = await this.db.transaction(async (tx) => {
-      const [createdRow] = await tx
-        .insert(dailyJournals)
-        .values({
-          date: input.date,
-          accountId: input.accountId,
-          mood: input.mood,
-          energy: input.energy,
-          focus: input.focus,
-          confidence: input.confidence,
-          plan: input.plan,
-          executionNotes: input.executionNotes,
-          lessons: input.lessons,
-          nextActions: input.nextActions,
-        })
-        .returning();
+    const [created] = await this.db
+      .insert(dailyJournals)
+      .values({
+        date: input.date,
+        accountId: input.accountId,
+        mood: input.mood,
+        energy: input.energy,
+        focus: input.focus,
+        confidence: input.confidence,
+        plan: input.plan,
+        executionNotes: input.executionNotes,
+        lessons: input.lessons,
+        nextActions: input.nextActions,
+      })
+      .returning();
 
-      await this.syncLinks(
-        createdRow.id,
-        input.tradeIds ?? [],
-        input.demonIds ?? [],
-        tx,
-      );
-      return createdRow;
-    });
+    await this.syncLinks(
+      created.id,
+      input.tradeIds ?? [],
+      input.demonIds ?? [],
+    );
 
     return this.getById(created.id);
   }
@@ -134,36 +125,36 @@ export class JournalsService {
     };
   }
 
+  @Transactional()
   async update(id: string, input: JournalUpdateDto) {
-    await this.db.transaction(async (tx) => {
-      const [updated] = await tx
-        .update(dailyJournals)
-        .set({
-          date: input.date,
-          accountId: input.accountId,
-          mood: input.mood,
-          energy: input.energy,
-          focus: input.focus,
-          confidence: input.confidence,
-          plan: input.plan,
-          executionNotes: input.executionNotes,
-          lessons: input.lessons,
-          nextActions: input.nextActions,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(dailyJournals.id, id), isNull(dailyJournals.deletedAt)))
-        .returning();
-      if (!updated) {
-        throw new NotFoundException({
-          error: 'NOT_FOUND',
-          message: 'Journal not found',
-        });
-      }
+    const [updated] = await this.db
+      .update(dailyJournals)
+      .set({
+        date: input.date,
+        accountId: input.accountId,
+        mood: input.mood,
+        energy: input.energy,
+        focus: input.focus,
+        confidence: input.confidence,
+        plan: input.plan,
+        executionNotes: input.executionNotes,
+        lessons: input.lessons,
+        nextActions: input.nextActions,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(dailyJournals.id, id), isNull(dailyJournals.deletedAt)))
+      .returning();
 
-      if (input.tradeIds !== undefined || input.demonIds !== undefined) {
-        await this.syncLinks(id, input.tradeIds, input.demonIds, tx);
-      }
-    });
+    if (!updated) {
+      throw new NotFoundException({
+        error: 'NOT_FOUND',
+        message: 'Journal not found',
+      });
+    }
+
+    if (input.tradeIds !== undefined || input.demonIds !== undefined) {
+      await this.syncLinks(id, input.tradeIds, input.demonIds);
+    }
 
     return this.getById(id);
   }
@@ -214,21 +205,20 @@ export class JournalsService {
     journalId: string,
     tradeIds?: string[],
     demonIds?: string[],
-    db: DbExecutor = this.db,
   ) {
     if (tradeIds !== undefined) {
-      await db
+      await this.db
         .delete(dailyJournalTrades)
         .where(eq(dailyJournalTrades.dailyJournalId, journalId));
     }
     if (demonIds !== undefined) {
-      await db
+      await this.db
         .delete(dailyJournalDemons)
         .where(eq(dailyJournalDemons.dailyJournalId, journalId));
     }
 
     if (tradeIds && tradeIds.length > 0) {
-      await db.insert(dailyJournalTrades).values(
+      await this.db.insert(dailyJournalTrades).values(
         tradeIds.map((tradeId) => ({
           dailyJournalId: journalId,
           tradeId,
@@ -236,7 +226,7 @@ export class JournalsService {
       );
     }
     if (demonIds && demonIds.length > 0) {
-      await db.insert(dailyJournalDemons).values(
+      await this.db.insert(dailyJournalDemons).values(
         demonIds.map((demonId) => ({
           dailyJournalId: journalId,
           demonId,
