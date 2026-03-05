@@ -57,7 +57,8 @@ function parseCsvRows(content: string): string[][] {
   }
 
   return rows.filter(
-    (currentRow) => currentRow.length > 0 && currentRow.some((value) => value.trim() !== ''),
+    (currentRow) =>
+      currentRow.length > 0 && currentRow.some((value) => value.trim() !== ''),
   );
 }
 
@@ -86,7 +87,8 @@ export function toCsv(
   }
   const headers = headerOrder ?? Object.keys(rows[0]);
   const escape = (value: unknown) => {
-    const sourceValue = value === null || value === undefined ? '' : String(value);
+    const sourceValue =
+      value === null || value === undefined ? '' : String(value);
     const raw = /^[\t\r ]*[=+\-@]/.test(sourceValue)
       ? `'${sourceValue}`
       : sourceValue;
