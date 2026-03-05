@@ -3,7 +3,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
 import { seed } from 'drizzle-seed';
 import * as schema from '../../src/db/schema';
-import type { SeedTransaction } from './admin.seed';
+import type { SeedDatabase } from './admin.seed';
 
 const DEFAULT_ROW_COUNT = 6;
 const DETERMINISTIC_SEED = 20260301;
@@ -74,10 +74,10 @@ export interface DummySeedResult {
 }
 
 async function getRowCount(
-  tx: SeedTransaction,
+  db: SeedDatabase,
   table: AnyPgTable,
 ): Promise<number> {
-  const [result] = await tx.select({ count: count() }).from(table);
+  const [result] = await db.select({ count: count() }).from(table);
   return Number(result?.count ?? 0);
 }
 
@@ -102,26 +102,26 @@ function buildUniquePairs<A, B>(
   return pairs;
 }
 
-async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
-  const tradesRows = await tx
+async function seedConstrainedTables(db: SeedDatabase): Promise<void> {
+  const tradesRows = await db
     .select({ id: schema.trades.id })
     .from(schema.trades);
-  const tradeTagsRows = await tx
+  const tradeTagsRows = await db
     .select({ id: schema.tradeTags.id })
     .from(schema.tradeTags);
-  const demonsRows = await tx
+  const demonsRows = await db
     .select({ id: schema.demons.id })
     .from(schema.demons);
-  const marketConditionTagsRows = await tx
+  const marketConditionTagsRows = await db
     .select({ id: schema.marketConditionTags.id })
     .from(schema.marketConditionTags);
-  const marketConditionsRows = await tx
+  const marketConditionsRows = await db
     .select({ id: schema.marketConditions.id })
     .from(schema.marketConditions);
-  const accountsRows = await tx
+  const accountsRows = await db
     .select({ id: schema.accounts.id })
     .from(schema.accounts);
-  const strategyConfluencesRows = await tx
+  const strategyConfluencesRows = await db
     .select({ id: schema.strategyConfluences.id })
     .from(schema.strategyConfluences);
 
@@ -152,7 +152,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     tradeTagIds,
     DEFAULT_ROW_COUNT,
   );
-  await tx
+  await db
     .insert(schema.tradeTagPivot)
     .values(
       tradeTagPairs.map((pair) => ({
@@ -167,7 +167,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     demonIds,
     DEFAULT_ROW_COUNT,
   );
-  await tx
+  await db
     .insert(schema.tradeDemonPivot)
     .values(
       tradeDemonPairs.map((pair) => ({
@@ -182,7 +182,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     marketConditionTagIds,
     DEFAULT_ROW_COUNT,
   );
-  await tx
+  await db
     .insert(schema.tradeMarketConditionTagPivot)
     .values(
       tradeMarketConditionTagPairs.map((pair) => ({
@@ -197,7 +197,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     marketConditionIds,
     DEFAULT_ROW_COUNT,
   );
-  await tx
+  await db
     .insert(schema.tradeMarketConditionPivot)
     .values(
       tradeMarketConditionPairs.map((pair) => ({
@@ -229,12 +229,12 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     },
   );
 
-  await tx
+  await db
     .insert(schema.dailyJournals)
     .values(dailyJournalValues)
     .onConflictDoNothing();
 
-  const dailyJournalRows = await tx
+  const dailyJournalRows = await db
     .select({ id: schema.dailyJournals.id })
     .from(schema.dailyJournals);
   const dailyJournalIds = dailyJournalRows.map((row) => row.id);
@@ -248,7 +248,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     tradeIds,
     DEFAULT_ROW_COUNT,
   );
-  await tx
+  await db
     .insert(schema.dailyJournalTrades)
     .values(
       journalTradePairs.map((pair) => ({
@@ -263,7 +263,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     demonIds,
     DEFAULT_ROW_COUNT,
   );
-  await tx
+  await db
     .insert(schema.dailyJournalDemons)
     .values(
       journalDemonPairs.map((pair) => ({
@@ -273,7 +273,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     )
     .onConflictDoNothing();
 
-  await tx
+  await db
     .insert(schema.dailyJournalAttachments)
     .values(
       Array.from({ length: DEFAULT_ROW_COUNT }, (_, index) => ({
@@ -289,7 +289,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     confluenceIds,
     DEFAULT_ROW_COUNT,
   );
-  await tx
+  await db
     .insert(schema.tradeConfluenceChecks)
     .values(
       tradeConfluencePairs.map((pair, index) => ({
@@ -301,7 +301,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     )
     .onConflictDoNothing();
 
-  await tx
+  await db
     .insert(schema.demonPerformanceLogs)
     .values(
       Array.from({ length: DEFAULT_ROW_COUNT }, (_, index) => {
@@ -321,7 +321,7 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
     )
     .onConflictDoNothing();
 
-  await tx
+  await db
     .insert(schema.demonEvidenceLogs)
     .values(
       Array.from({ length: DEFAULT_ROW_COUNT }, (_, index) => ({
@@ -336,14 +336,14 @@ async function seedConstrainedTables(tx: SeedTransaction): Promise<void> {
 }
 
 export async function seedDummyData(
-  tx: SeedTransaction,
+  db: SeedDatabase,
 ): Promise<DummySeedResult> {
   console.log('[seed:dummy] checking existing data for idempotency');
 
   const populatedTables: Array<{ table: string; count: number }> = [];
 
   for (const item of TABLES_TO_SEED) {
-    const rows = await getRowCount(tx, item.table);
+    const rows = await getRowCount(db, item.table);
     if (rows > 0) {
       populatedTables.push({ table: item.name, count: rows });
     }
@@ -360,9 +360,9 @@ export async function seedDummyData(
     };
   }
 
-  const txAsDb = tx as unknown as NodePgDatabase<typeof DRIZZLE_SEED_SCHEMA>;
+  const dbAsSeed = db as unknown as NodePgDatabase<typeof DRIZZLE_SEED_SCHEMA>;
 
-  await seed(txAsDb, DRIZZLE_SEED_SCHEMA, {
+  await seed(dbAsSeed, DRIZZLE_SEED_SCHEMA, {
     count: DEFAULT_ROW_COUNT,
     seed: DETERMINISTIC_SEED,
   }).refine((funcs) => ({
@@ -373,7 +373,7 @@ export async function seedDummyData(
     },
   }));
 
-  await seedConstrainedTables(tx);
+  await seedConstrainedTables(db);
 
   console.log('[seed:dummy] dummy data inserted');
 

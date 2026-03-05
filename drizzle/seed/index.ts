@@ -25,14 +25,10 @@ async function runSeed(): Promise<number> {
 
     const db = drizzle(pool, { schema });
 
-    const result = await db.transaction(async (tx) => {
-      console.log('[seed] transaction started');
-
-      const admin = await seedAdmin(tx, env);
-      const dummy = await seedDummyData(tx);
-
-      return { admin, dummy };
-    });
+    const result = {
+      admin: await seedAdmin(db, env),
+      dummy: await seedDummyData(db),
+    };
 
     console.log(
       `[seed] admin ${result.admin.action}: ${result.admin.admin.email}`,
@@ -52,7 +48,7 @@ async function runSeed(): Promise<number> {
     console.log('[seed] success');
     return 0;
   } catch (error) {
-    console.error('[seed] failed. transaction rolled back.');
+    console.error('[seed] failed.');
     console.error(error);
     return 1;
   } finally {
