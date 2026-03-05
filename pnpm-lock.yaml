@@ -56,6 +56,9 @@ importers:
       fastify:
         specifier: ^5.7.4
         version: 5.7.4
+      nestjs-cls:
+        specifier: ^6.2.0
+        version: 6.2.0(@nestjs/common@11.1.14(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.14)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       nestjs-zod:
         specifier: ^5.1.1
         version: 5.1.1(@nestjs/common@11.1.14(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/swagger@11.2.6(@fastify/static@9.0.0)(@nestjs/common@11.1.14(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.14)(reflect-metadata@0.2.2))(rxjs@7.8.2)(zod@4.3.6)

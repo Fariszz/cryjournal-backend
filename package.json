@@ -41,6 +41,7 @@
     "drizzle-orm": "^0.45.1",
     "drizzle-seed": "^0.3.1",
     "fastify": "^5.7.4",
+    "nestjs-cls": "^6.2.0",
     "nestjs-zod": "^5.1.1",
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
@@ -75,8 +76,8 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
-    "tsx": "^4.20.6",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
