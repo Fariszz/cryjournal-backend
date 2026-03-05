@@ -161,9 +161,7 @@ export class TradesService {
   @Transactional()
   async update(id: string, input: TradeUpdateDto) {
     const existing = await this.mustGetTrade(id);
-    const parseOptionalNumber = (
-      value: string | null,
-    ): number | undefined => {
+    const parseOptionalNumber = (value: string | null): number | undefined => {
       return value === null ? undefined : Number(value);
     };
 
@@ -184,14 +182,11 @@ export class TradesService {
         input.entryTimeframe ?? existing.entryTimeframe ?? undefined,
       tradingSession:
         input.tradingSession ?? existing.tradingSession ?? undefined,
-      entryPrice:
-        input.entryPrice ?? parseOptionalNumber(existing.entryPrice),
+      entryPrice: input.entryPrice ?? parseOptionalNumber(existing.entryPrice),
       exitPrice: input.exitPrice ?? parseOptionalNumber(existing.exitPrice),
       stopLoss: input.stopLoss ?? parseOptionalNumber(existing.stopLoss),
-      takeProfit:
-        input.takeProfit ?? parseOptionalNumber(existing.takeProfit),
-      dollarRisk:
-        input.dollarRisk ?? parseOptionalNumber(existing.dollarRisk),
+      takeProfit: input.takeProfit ?? parseOptionalNumber(existing.takeProfit),
+      dollarRisk: input.dollarRisk ?? parseOptionalNumber(existing.dollarRisk),
       positionSize:
         input.positionSize ?? parseOptionalNumber(existing.positionSize),
       positionSizeUnit:
@@ -200,8 +195,7 @@ export class TradesService {
         input.brokerCommission ??
         parseOptionalNumber(existing.brokerCommission),
       swap: input.swap ?? parseOptionalNumber(existing.swap),
-      fundingFee:
-        input.fundingFee ?? parseOptionalNumber(existing.fundingFee),
+      fundingFee: input.fundingFee ?? parseOptionalNumber(existing.fundingFee),
       positionType: input.positionType ?? existing.positionType ?? undefined,
       leverage: input.leverage ?? parseOptionalNumber(existing.leverage),
       marginMode: input.marginMode ?? existing.marginMode ?? undefined,
@@ -260,7 +254,10 @@ export class TradesService {
       })
       .where(eq(trades.id, id));
 
-    if (input.strategyId !== undefined || input.confluenceChecks !== undefined) {
+    if (
+      input.strategyId !== undefined ||
+      input.confluenceChecks !== undefined
+    ) {
       const checks = await this.syncConfluenceChecks(
         id,
         merged.strategyId,
