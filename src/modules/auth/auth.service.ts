@@ -1,39 +1,59 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
 import {
-  ACCESS_COOKIE_NAME,
-  REFRESH_COOKIE_NAME,
-} from '../../common/auth/cookie.util';
-import { hashPassword, verifyPassword } from '../../common/auth/password.util';
-import { signJwt } from '../../common/auth/jwt.util';
-import { env } from '../../common/config/env';
-import { InjectDb } from '../../db/db.provider';
-import type { DB } from '../../db/client';
-import { users } from '../../db/schema';
-import { UsersService } from '../users/users.service';
-import type { FastifyReply } from 'fastify';
-
-const MINUTE_MS = 60_000;
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { verifyPassword } from '@common/auth/password.util';
+import type { AppRole } from '@modules/roles/roles.constants';
+import { UsersService } from '@modules/users/users.service';
+import type { AuthResponse, AuthenticatedUser, JwtPayload } from './auth.types';
+import type { LoginInput } from './schemas/login.schema';
+import type { RegisterInput } from './schemas/register.schema';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectDb() private readonly db: DB,
     private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async login(
+  async register(input: RegisterInput): Promise<AuthResponse> {
+    const existingUser = await this.usersService.findByEmail(input.email);
+    if (existingUser) {
+      throw new ConflictException({
+        error: 'CONFLICT',
+        message: 'Email is already registered',
+      });
+    }
+
+    const createdUser = await this.usersService.createLocalUser({
+      email: input.email,
+      name: input.name,
+      password: input.password,
+    });
+
+    return this.createAuthResponse({
+      id: createdUser.id,
+      email: createdUser.email,
+      name: createdUser.name,
+      roles: createdUser.roles,
+      isActive: createdUser.isActive,
+    });
+  }
+
+  async validateLocalUser(
     email: string,
     password: string,
-    reply: FastifyReply,
-  ): Promise<{ id: string; email: string; name: string }> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
+  ): Promise<AuthenticatedUser> {
+    const user = await this.usersService.findAuthUserByEmail(email);
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedException({
         error: 'INVALID_CREDENTIALS',
         message: 'Invalid email or password',
       });
     }
+
     if (!user.isActive) {
       throw new UnauthorizedException({
         error: 'UNAUTHORIZED',
@@ -41,110 +61,98 @@ export class AuthService {
       });
     }
 
-    const now = new Date();
-    if (user.lockedUntil && user.lockedUntil > now) {
-      throw new UnauthorizedException({
-        error: 'ACCOUNT_LOCKED',
-        message: 'Account is temporarily locked',
-      });
-    }
-
-    const valid = await verifyPassword(password, user.passwordHash);
-    if (!valid) {
-      const attempts = user.failedLoginAttempts + 1;
-      const lockReached = attempts >= env.LOGIN_MAX_ATTEMPTS;
-      await this.db
-        .update(users)
-        .set({
-          failedLoginAttempts: lockReached ? 0 : attempts,
-          lockedUntil: lockReached
-            ? new Date(Date.now() + env.LOGIN_LOCKOUT_MINUTES * MINUTE_MS)
-            : null,
-          updatedAt: now,
-        })
-        .where(eq(users.id, user.id));
+    const validPassword = await verifyPassword(password, user.passwordHash);
+    if (!validPassword) {
       throw new UnauthorizedException({
         error: 'INVALID_CREDENTIALS',
         message: 'Invalid email or password',
       });
     }
 
-    const accessToken = signJwt(
-      { sub: user.id, email: user.email },
-      env.JWT_ACCESS_SECRET,
-      env.JWT_ACCESS_TTL_SECONDS,
-    );
-    const refreshToken = signJwt(
-      { sub: user.id, email: user.email },
-      env.JWT_REFRESH_SECRET,
-      env.JWT_REFRESH_TTL_SECONDS,
-    );
-    const refreshTokenHash = await hashPassword(refreshToken);
-
-    await this.db
-      .update(users)
-      .set({
-        failedLoginAttempts: 0,
-        lockedUntil: null,
-        refreshTokenHash,
-        updatedAt: now,
-      })
-      .where(eq(users.id, user.id));
-
-    this.setAuthCookies(reply, accessToken, refreshToken);
-    return { id: user.id, email: user.email, name: user.name };
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      roles: user.roles,
+      isActive: user.isActive,
+    };
   }
 
-  async logout(
-    userId: string,
-    reply: FastifyReply,
-  ): Promise<{ success: true }> {
-    await this.db
-      .update(users)
-      .set({ refreshTokenHash: null, updatedAt: new Date() })
-      .where(eq(users.id, userId));
+  async login(input: LoginInput): Promise<AuthResponse>;
+  async login(input: AuthenticatedUser): Promise<AuthResponse>;
+  async login(input: AuthenticatedUser | LoginInput): Promise<AuthResponse> {
+    if ('password' in input) {
+      const authenticatedUser = await this.validateLocalUser(
+        input.email,
+        input.password,
+      );
+      return this.createAuthResponse(authenticatedUser);
+    }
 
-    this.clearAuthCookies(reply);
-    return { success: true };
+    return this.createAuthResponse(input);
   }
 
-  async getMe(
-    userId: string,
-  ): Promise<{ id: string; email: string; name: string }> {
-    const user = await this.usersService.findById(userId);
-    if (!user) {
+  async validateGoogleUser(input: {
+    googleId: string;
+    email: string;
+    name: string;
+  }): Promise<AuthenticatedUser> {
+    const user = await this.usersService.upsertGoogleUser(input);
+    if (!user.isActive) {
       throw new UnauthorizedException({
         error: 'UNAUTHORIZED',
-        message: 'User not found',
+        message: 'User is inactive',
       });
     }
-    return { id: user.id, email: user.email, name: user.name };
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      roles: user.roles,
+      isActive: user.isActive,
+    };
   }
 
-  private setAuthCookies(
-    reply: FastifyReply,
-    accessToken: string,
-    refreshToken: string,
-  ): void {
-    const secure = env.NODE_ENV === 'production';
-    reply.setCookie(ACCESS_COOKIE_NAME, accessToken, {
-      httpOnly: true,
-      secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: env.JWT_ACCESS_TTL_SECONDS,
-    });
-    reply.setCookie(REFRESH_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: env.JWT_REFRESH_TTL_SECONDS,
-    });
+  async getMe(userId: string): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    roles: AppRole[];
+  }> {
+    const user = await this.usersService.findProfileById(userId);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'User not found or inactive',
+      });
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      roles: user.roles,
+    };
   }
 
-  private clearAuthCookies(reply: FastifyReply): void {
-    reply.clearCookie(ACCESS_COOKIE_NAME, { path: '/' });
-    reply.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
+  private createAuthResponse(user: AuthenticatedUser): AuthResponse {
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      roles: user.roles,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        roles: user.roles,
+      },
+    };
   }
 }

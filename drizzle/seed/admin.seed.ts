@@ -21,11 +21,25 @@ export async function seedAdmin(
   env: SeedEnv,
 ): Promise<AdminSeedResult> {
   console.log(`[seed:admin] seeding admin for ${env.ADMIN_EMAIL}`);
+  await db
+    .insert(schema.roles)
+    .values([{ name: 'ADMIN' }, { name: 'USER' }])
+    .onConflictDoNothing();
+
+  const [adminRole] = await db
+    .select({ id: schema.roles.id })
+    .from(schema.roles)
+    .where(eq(schema.roles.name, 'ADMIN'))
+    .limit(1);
+
+  if (!adminRole) {
+    throw new Error('ADMIN role does not exist.');
+  }
 
   const [existingAdmin] = await db
     .select()
     .from(schema.users)
-    .where(eq(schema.users.email, env.ADMIN_EMAIL))
+    .where(eq(schema.users.email, env.ADMIN_EMAIL.toLowerCase()))
     .limit(1);
 
   const passwordHash = await hashPassword(env.ADMIN_PASSWORD);
@@ -34,7 +48,7 @@ export async function seedAdmin(
     const [insertedAdmin] = await db
       .insert(schema.users)
       .values({
-        email: env.ADMIN_EMAIL,
+        email: env.ADMIN_EMAIL.toLowerCase(),
         name: env.ADMIN_NAME,
         passwordHash,
       })
@@ -43,6 +57,11 @@ export async function seedAdmin(
     if (!insertedAdmin) {
       throw new Error('Failed to insert admin user.');
     }
+
+    await db
+      .insert(schema.userRoles)
+      .values({ userId: insertedAdmin.id, roleId: adminRole.id })
+      .onConflictDoNothing();
 
     console.log('[seed:admin] admin inserted');
     return { action: 'inserted', admin: insertedAdmin };
@@ -58,12 +77,17 @@ export async function seedAdmin(
       lockedUntil: null,
       updatedAt: new Date(),
     })
-    .where(eq(schema.users.email, env.ADMIN_EMAIL))
+    .where(eq(schema.users.email, env.ADMIN_EMAIL.toLowerCase()))
     .returning();
 
   if (!updatedAdmin) {
     throw new Error('Failed to update existing admin user.');
   }
+
+  await db
+    .insert(schema.userRoles)
+    .values({ userId: updatedAdmin.id, roleId: adminRole.id })
+    .onConflictDoNothing();
 
   console.log('[seed:admin] admin updated');
   return { action: 'updated', admin: updatedAdmin };

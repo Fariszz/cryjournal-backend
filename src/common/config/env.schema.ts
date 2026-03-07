@@ -6,16 +6,14 @@ export const envSchema = z.object({
     .default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   DB_URL: z.string().min(1),
-  JWT_ACCESS_SECRET: z
+  JWT_SECRET: z.string().min(16).default('local-jwt-secret-change-me'),
+  JWT_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
+  GOOGLE_CLIENT_ID: z.string().default('replace-google-client-id'),
+  GOOGLE_CLIENT_SECRET: z.string().default('replace-google-client-secret'),
+  GOOGLE_CALLBACK_URL: z
     .string()
-    .min(16)
-    .default('local-access-secret-change-me'),
-  JWT_REFRESH_SECRET: z
-    .string()
-    .min(16)
-    .default('local-refresh-secret-change-me'),
-  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(1800),
-  JWT_REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(2592000),
+    .url()
+    .default('http://localhost:3000/api/v1/auth/google/callback'),
   UPLOAD_DIR: z.string().default('uploads'),
   MAX_UPLOAD_BYTES: z.coerce
     .number()

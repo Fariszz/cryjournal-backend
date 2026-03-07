@@ -5,6 +5,7 @@ export * from './demons.schema';
 export * from './enums';
 export * from './instruments.schema';
 export * from './journals.schema';
+export * from './roles.schema';
 export * from './settings.schema';
 export * from './strategies.schema';
 export * from './trades.schema';

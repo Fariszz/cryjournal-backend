@@ -34,6 +34,14 @@ async function bootstrap(): Promise<void> {
     .setTitle('CryJournal API')
     .setDescription('OpenAPI documentation for CryJournal')
     .setVersion('1.0.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'bearer',
+    )
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, swaggerDocument, {

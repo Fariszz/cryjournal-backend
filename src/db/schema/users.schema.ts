@@ -7,8 +7,9 @@ export const users = pgTable(
   {
     id: uuidPk(),
     email: varchar('email', { length: 255 }).notNull(),
-    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }),
     name: varchar('name', { length: 255 }).notNull(),
+    googleId: varchar('google_id', { length: 255 }),
     isActive: boolean('is_active').notNull().default(true),
     ...lockoutColumns(),
     createdAt: createdAt(),
@@ -16,5 +17,6 @@ export const users = pgTable(
   },
   (table) => ({
     usersEmailUnique: uniqueIndex('users_email_unique').on(table.email),
+    usersGoogleIdUnique: uniqueIndex('users_google_id_unique').on(table.googleId),
   }),
 );
