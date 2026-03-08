@@ -4,6 +4,7 @@ import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { appSettings } from '../../db/schema';
 import type { UpdateSettingsDto } from './settings.schemas';
+import type { AppSettingsResponse } from './interfaces/app-settings.response';
 
 const SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -11,7 +12,7 @@ const SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
 export class SettingsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async getSettings() {
+  async getSettings(): Promise<AppSettingsResponse | null> {
     const [settings] = await this.db
       .select()
       .from(appSettings)
