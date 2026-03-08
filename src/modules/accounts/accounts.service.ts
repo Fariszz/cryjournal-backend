@@ -9,12 +9,14 @@ import type {
 import type { DB } from '@db/client';
 import { InjectDb } from '@db/db.provider';
 import { accountGroups, accounts } from '@db/schema';
+import type { AccountGroupResponse } from './interfaces/account-group.response';
+import type { AccountResponse } from './interfaces/account.response';
 
 @Injectable()
 export class AccountsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async listGroups() {
+  async listGroups(): Promise<AccountGroupResponse[]> {
     return this.db.select().from(accountGroups);
   }
 
@@ -64,7 +66,7 @@ export class AccountsService {
   async listAccounts(query: {
     groupId?: string | undefined;
     archived?: boolean | undefined;
-  }) {
+  }): Promise<AccountResponse[]> {
     if (query.groupId && query.archived === undefined) {
       return this.db
         .select()
