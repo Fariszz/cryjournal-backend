@@ -3,6 +3,13 @@ import { and, asc, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { accounts, instruments, trades } from '../../db/schema';
+import type { AnalyticsAccountEntryTimeHeatmapResponse } from './interfaces/analytics-account-entry-time-heatmap.response';
+import type { AnalyticsAccountInstrumentsResponse } from './interfaces/analytics-account-instruments.response';
+import type { AnalyticsAccountOverviewResponse } from './interfaces/analytics-account-overview.response';
+import type { AnalyticsAccountPnlCalendarResponse } from './interfaces/analytics-account-pnl-calendar.response';
+import type { AnalyticsAccountRecentTradeResponse } from './interfaces/analytics-account-recent-trade.response';
+import type { AnalyticsAccountSessionResponse } from './interfaces/analytics-account-session.response';
+import type { AnalyticsHomeResponse } from './interfaces/analytics-home.response';
 
 function variance(values: number[]): number {
   if (values.length === 0) {
@@ -30,7 +37,7 @@ export class AnalyticsService {
     dateFrom: string;
     dateTo: string;
     accountId?: string | undefined;
-  }) {
+  }): Promise<AnalyticsHomeResponse> {
     const conditions = [
       eq(trades.type, 'executed'),
       isNull(trades.deletedAt),
@@ -142,7 +149,7 @@ export class AnalyticsService {
   async accountOverview(
     id: string,
     input: { dateFrom: string; dateTo: string },
-  ) {
+  ): Promise<AnalyticsAccountOverviewResponse> {
     const [account] = await this.db
       .select()
       .from(accounts)
@@ -228,7 +235,7 @@ export class AnalyticsService {
   async accountInstruments(
     id: string,
     input: { dateFrom: string; dateTo: string; page: number; pageSize: number },
-  ) {
+  ): Promise<AnalyticsAccountInstrumentsResponse> {
     const where = and(
       eq(trades.accountId, id),
       isNull(trades.deletedAt),
@@ -292,7 +299,7 @@ export class AnalyticsService {
   async accountSessions(
     id: string,
     input: { dateFrom: string; dateTo: string },
-  ) {
+  ): Promise<AnalyticsAccountSessionResponse[]> {
     const rows = await this.db
       .select({
         session: trades.tradingSession,
@@ -326,7 +333,7 @@ export class AnalyticsService {
   async accountEntryTimeHeatmap(
     id: string,
     input: { dateFrom: string; dateTo: string },
-  ) {
+  ): Promise<AnalyticsAccountEntryTimeHeatmapResponse[]> {
     const rows = await this.db
       .select({
         hour: sql<number>`extract(hour from ${trades.entryDatetime})`,
@@ -353,7 +360,10 @@ export class AnalyticsService {
     }));
   }
 
-  async accountPnlCalendar(id: string, input: { month?: string | undefined }) {
+  async accountPnlCalendar(
+    id: string,
+    input: { month?: string | undefined },
+  ): Promise<AnalyticsAccountPnlCalendarResponse[]> {
     const month = input.month ?? new Date().toISOString().slice(0, 7);
     const rows = await this.db
       .select({
@@ -380,7 +390,10 @@ export class AnalyticsService {
     }));
   }
 
-  async accountRecentTrades(id: string, limit: number) {
+  async accountRecentTrades(
+    id: string,
+    limit: number,
+  ): Promise<AnalyticsAccountRecentTradeResponse[]> {
     return this.db
       .select()
       .from(trades)
