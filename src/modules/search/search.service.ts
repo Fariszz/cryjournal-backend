@@ -9,12 +9,13 @@ import {
   tradeTags,
   trades,
 } from '../../db/schema';
+import type { SearchResponse } from './interfaces/search.response';
 
 @Injectable()
 export class SearchService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async search(query: string) {
+  async search(query: string): Promise<SearchResponse> {
     const normalizedQuery = query.trim();
     if (normalizedQuery.length < 2) {
       return {
