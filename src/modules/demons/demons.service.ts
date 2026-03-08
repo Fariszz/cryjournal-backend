@@ -8,12 +8,15 @@ import {
   DemonUpdateDto,
   EvidenceCreateDto,
 } from './demons.schemas';
+import type { DemonEvidenceLogResponse } from './interfaces/demon-evidence-log.response';
+import type { DemonPerformanceLogResponse } from './interfaces/demon-performance-log.response';
+import type { DemonResponse } from './interfaces/demon.response';
 
 @Injectable()
 export class DemonsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async list() {
+  async list(): Promise<DemonResponse[]> {
     return this.db.select().from(demons);
   }
 
@@ -32,7 +35,7 @@ export class DemonsService {
     return created;
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<DemonResponse> {
     const [demon] = await this.db
       .select()
       .from(demons)
@@ -79,7 +82,7 @@ export class DemonsService {
     return created;
   }
 
-  async listEvidence(demonId: string) {
+  async listEvidence(demonId: string): Promise<DemonEvidenceLogResponse[]> {
     await this.getById(demonId);
     return this.db
       .select()
@@ -88,7 +91,7 @@ export class DemonsService {
       .orderBy(desc(demonEvidenceLogs.createdAt));
   }
 
-  async performance(demonId: string) {
+  async performance(demonId: string): Promise<DemonPerformanceLogResponse[]> {
     await this.getById(demonId);
     return this.db
       .select()
