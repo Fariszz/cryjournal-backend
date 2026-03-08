@@ -4,6 +4,7 @@ import type { DB } from '../../db/client';
 import { tradeContextEvents } from '../../db/schema';
 import { ECONOMIC_CALENDAR_PROVIDER } from './economic-calendar.provider';
 import type { EconomicCalendarProvider } from './economic-calendar.provider';
+import type { EconomicCalendarEvent } from './economic-calendar.provider';
 import type {
   AttachContextEventDto,
   EconomicCalendarQueryDto,
@@ -16,7 +17,7 @@ const MAX_CACHE_ENTRIES = 500;
 export class EconomicCalendarService {
   private readonly cache = new Map<
     string,
-    { expiresAt: number; data: unknown }
+    { expiresAt: number; data: EconomicCalendarEvent[] }
   >();
 
   constructor(
@@ -25,7 +26,9 @@ export class EconomicCalendarService {
     private readonly provider: EconomicCalendarProvider,
   ) {}
 
-  async getEvents(input: EconomicCalendarQueryDto) {
+  async getEvents(
+    input: EconomicCalendarQueryDto,
+  ): Promise<EconomicCalendarEvent[]> {
     const key = JSON.stringify(input);
     const cached = this.cache.get(key);
     const now = Date.now();

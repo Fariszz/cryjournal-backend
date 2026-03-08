@@ -4,12 +4,13 @@ import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { instruments } from '../../db/schema';
 import { InstrumentCreateDto } from './instruments.schemas';
+import type { InstrumentResponse } from './interfaces/instrument.response';
 
 @Injectable()
 export class InstrumentsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async list() {
+  async list(): Promise<InstrumentResponse[]> {
     return this.db.select().from(instruments);
   }
 
