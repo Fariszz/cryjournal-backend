@@ -34,6 +34,9 @@ import type {
   TradeCreateDto,
   TradeUpdateDto,
 } from './trades.schemas';
+import type { TradeDetailResponse } from './interfaces/trade-detail.response';
+import type { TradesListResponse } from './interfaces/trades-list.response';
+import type { TradeResponse } from './interfaces/trade.response';
 
 interface TradeInput {
   accountId: string;
@@ -311,7 +314,7 @@ export class TradesService {
     demons?: string[] | undefined;
     page: number;
     pageSize: number;
-  }) {
+  }): Promise<TradesListResponse> {
     const conditions = [isNull(trades.deletedAt)];
     if (input.accountId) {
       conditions.push(eq(trades.accountId, input.accountId));
@@ -378,7 +381,7 @@ export class TradesService {
     };
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<TradeDetailResponse> {
     const trade = await this.mustGetTrade(id);
     const [attachments, tags, demons, checks] = await Promise.all([
       this.db
@@ -545,7 +548,7 @@ export class TradesService {
     return warnings;
   }
 
-  private async mustGetTrade(id: string) {
+  private async mustGetTrade(id: string): Promise<TradeResponse> {
     const [trade] = await this.db
       .select()
       .from(trades)
