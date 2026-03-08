@@ -16,12 +16,17 @@ import type {
   StrategyCreateDto,
   StrategyUpdateDto,
 } from './strategies.schemas';
+import type { ActionSuccessResponse } from './interfaces/action-success.response';
+import type { StrategyAnalyticsResponse } from './interfaces/strategy-analytics.response';
+import type { StrategyConfluenceResponse } from './interfaces/strategy-confluence.response';
+import type { StrategyDetailResponse } from './interfaces/strategy-detail.response';
+import type { StrategyResponse } from './interfaces/strategy.response';
 
 @Injectable()
 export class StrategiesService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async list() {
+  async list(): Promise<StrategyResponse[]> {
     return this.db.select().from(strategies);
   }
 
@@ -63,7 +68,7 @@ export class StrategiesService {
     return this.getById(strategy.id);
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<StrategyDetailResponse> {
     const [strategy] = await this.db
       .select()
       .from(strategies)
@@ -151,7 +156,7 @@ export class StrategiesService {
     return this.getById(id);
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<ActionSuccessResponse> {
     const [linked] = await this.db
       .select({ id: trades.id })
       .from(trades)
@@ -169,7 +174,7 @@ export class StrategiesService {
     return { success: true };
   }
 
-  async analytics(id: string) {
+  async analytics(id: string): Promise<StrategyAnalyticsResponse> {
     const [summary] = await this.db
       .select({
         tradesCount: sql<number>`count(*)`,
@@ -205,7 +210,9 @@ export class StrategiesService {
     };
   }
 
-  async getConfluences(strategyId: string) {
+  async getConfluences(
+    strategyId: string,
+  ): Promise<StrategyConfluenceResponse[]> {
     return this.db
       .select()
       .from(strategyConfluences)
