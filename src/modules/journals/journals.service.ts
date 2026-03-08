@@ -12,6 +12,8 @@ import {
   dailyJournals,
 } from '../../db/schema';
 import { JournalCreateDto, JournalUpdateDto } from './journals.schemas';
+import type { JournalDetailResponse } from './interfaces/journal-detail.response';
+import type { JournalsListResponse } from './interfaces/journals-list.response';
 
 @Injectable()
 export class JournalsService {
@@ -26,7 +28,7 @@ export class JournalsService {
     accountId?: string | undefined;
     page: number;
     pageSize: number;
-  }) {
+  }): Promise<JournalsListResponse> {
     const conditions = [isNull(dailyJournals.deletedAt)];
     if (input.accountId) {
       conditions.push(eq(dailyJournals.accountId, input.accountId));
@@ -90,7 +92,7 @@ export class JournalsService {
     return this.getById(created.id);
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<JournalDetailResponse> {
     const [journal] = await this.db
       .select()
       .from(dailyJournals)
