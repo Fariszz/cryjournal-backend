@@ -1,5 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
+} from '@common/constants/pagination.constants';
 
 export const journalCreateSchema = z.object({
   date: z.string().min(1),
@@ -26,8 +31,13 @@ export const journalListQuerySchema = z.object({
   date_from: z.string().optional(),
   date_to: z.string().optional(),
   account_id: z.string().uuid().optional(),
-  page: z.coerce.number().int().positive().default(1),
-  page_size: z.coerce.number().int().positive().max(100).default(20),
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  page_size: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(MAX_PAGE_SIZE)
+    .default(DEFAULT_PAGE_SIZE),
 });
 
 export const journalIdParamSchema = z.object({

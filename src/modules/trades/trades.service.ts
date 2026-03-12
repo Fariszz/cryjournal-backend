@@ -6,6 +6,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { and, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
+import { AccountTypeEnum } from '@common/enums/account-type.enum';
+import { TradeDirectionEnum } from '@common/enums/trade-direction.enum';
+import { TradeMarginModeEnum } from '@common/enums/trade-margin-mode.enum';
+import { TradePositionSizeUnitEnum } from '@common/enums/trade-position-size-unit.enum';
+import { TradePositionTypeEnum } from '@common/enums/trade-position-type.enum';
+import { TradeTypeEnum } from '@common/enums/trade-type.enum';
 import { STORAGE_PROVIDER } from '../../common/storage/storage.provider';
 import type { StorageProvider } from '../../common/storage/storage.provider';
 import { InjectDb } from '../../db/db.provider';
@@ -40,9 +46,9 @@ import type { TradeResponse } from './interfaces/trade.response';
 
 interface TradeInput {
   accountId: string;
-  type: 'executed' | 'missed';
+  type: TradeTypeEnum;
   instrumentId: string;
-  direction: 'long' | 'short';
+  direction: TradeDirectionEnum;
   timezone: string;
   entryDatetime: string;
   exitDatetime?: string | undefined;
@@ -54,13 +60,13 @@ interface TradeInput {
   takeProfit?: number | undefined;
   dollarRisk?: number | undefined;
   positionSize?: number | undefined;
-  positionSizeUnit?: 'lot' | 'usd' | 'contract' | undefined;
+  positionSizeUnit?: TradePositionSizeUnitEnum | undefined;
   brokerCommission?: number | undefined;
   swap?: number | undefined;
   fundingFee?: number | undefined;
-  positionType?: 'spot' | 'futures' | undefined;
+  positionType?: TradePositionTypeEnum | undefined;
   leverage?: number | undefined;
-  marginMode?: 'cross' | 'isolated' | undefined;
+  marginMode?: TradeMarginModeEnum | undefined;
   strategyId?: string | undefined;
   thesis?: string | undefined;
   postAnalysis?: string | undefined;
@@ -306,7 +312,7 @@ export class TradesService {
     accountId?: string | undefined;
     instrumentId?: string | undefined;
     strategyId?: string | undefined;
-    type?: 'executed' | 'missed' | undefined;
+    type?: TradeTypeEnum | undefined;
     dateFrom?: string | undefined;
     dateTo?: string | undefined;
     session?: string | undefined;
@@ -519,7 +525,7 @@ export class TradesService {
       });
     }
 
-    if (account.accountType !== 'crypto') {
+    if (account.accountType !== AccountTypeEnum.CRYPTO) {
       if (input.positionType || input.leverage || input.marginMode) {
         throw new BadRequestException({
           error: 'VALIDATION_ERROR',

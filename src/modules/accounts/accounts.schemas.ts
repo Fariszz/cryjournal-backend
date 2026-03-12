@@ -1,5 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { AccountTypeEnum } from '@common/enums/account-type.enum';
+import { AccountArchivedQueryEnum } from '@common/enums/account-archived-query.enum';
 
 export const accountGroupCreateSchema = z.object({
   name: z.string().min(1),
@@ -16,7 +18,7 @@ export const accountCreateSchema = z.object({
   groupId: z.string().uuid().nullable().optional(),
   name: z.string().min(1),
   broker: z.string().min(1),
-  accountType: z.enum(['crypto', 'forex', 'stocks']),
+  accountType: z.enum(AccountTypeEnum),
   baseCurrency: z.string().min(1),
   timezone: z.string().min(1),
   startingBalance: z.coerce.number().optional(),
@@ -30,7 +32,7 @@ export const accountUpdateSchema = accountCreateSchema
 
 export const accountListSchema = z.object({
   group_id: z.string().uuid().optional(),
-  archived: z.enum(['true', 'false']).optional(),
+  archived: z.nativeEnum(AccountArchivedQueryEnum).optional(),
 });
 
 export const accountGroupIdParamSchema = z.object({

@@ -25,6 +25,7 @@ import {
   accountListSchema,
   accountUpdateSchema,
 } from './accounts.schemas';
+import { AccountArchivedQueryEnum } from '@common/enums/account-archived-query.enum';
 import { AccountsService } from './accounts.service';
 
 @Controller()
@@ -69,7 +70,10 @@ export class AccountsController {
   async listAccounts(@Query() query: AccountListQueryDto) {
     const data = await this.accountsService.listAccounts({
       groupId: query.group_id,
-      archived: query.archived ? query.archived === 'true' : undefined,
+      archived: query.archived
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+          query.archived === AccountArchivedQueryEnum.TRUE
+        : undefined,
     });
     return { data };
   }

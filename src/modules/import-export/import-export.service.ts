@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { and, desc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { z } from 'zod';
+import { TradeDirectionEnum } from '@common/enums/trade-direction.enum';
+import { TradeTypeEnum } from '@common/enums/trade-type.enum';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
-import { accounts, dailyJournals, instruments, trades } from '../../db/schema';
+import { accounts, dailyJournals, trades } from '../../db/schema';
 import { InstrumentsService } from '../instruments/instruments.service';
 import { TradesService } from '../trades/trades.service';
 import { parseCsv, toCsv } from './csv.util';
@@ -43,13 +45,13 @@ const csvTradeRowSchema = z.object({
   type: z
     .string()
     .optional()
-    .transform((value) => value?.toLowerCase() ?? 'executed')
-    .pipe(z.enum(['executed', 'missed'])),
+    .transform((value) => value?.toLowerCase() ?? TradeTypeEnum.EXECUTED)
+    .pipe(z.enum(TradeTypeEnum)),
   direction: z
     .string()
     .optional()
-    .transform((value) => value?.toLowerCase() ?? 'long')
-    .pipe(z.enum(['long', 'short'])),
+    .transform((value) => value?.toLowerCase() ?? TradeDirectionEnum.LONG)
+    .pipe(z.enum(TradeDirectionEnum)),
   timezone: optionalStringSchema,
   entry_datetime: datetimeStringSchema,
   exit_datetime: optionalDatetimeStringSchema,

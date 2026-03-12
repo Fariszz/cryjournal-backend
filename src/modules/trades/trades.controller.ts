@@ -11,9 +11,10 @@ import {
   Req,
   UsePipes,
 } from '@nestjs/common';
-import type { Multipart, MultipartFile } from '@fastify/multipart';
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { hasMultipartFile } from '@common/utils/has-multipart-file.util';
+import { readMultipartField } from '@common/utils/read-multipart-field.util';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
@@ -45,22 +46,6 @@ const tradeAttachmentFieldsSchema = z.object({
     z.string().optional(),
   ),
 });
-
-function hasMultipartFile(
-  req: FastifyRequest,
-): req is FastifyRequest & { file: () => Promise<MultipartFile | undefined> } {
-  return typeof (req as { file?: unknown }).file === 'function';
-}
-
-function readMultipartField(
-  field: Multipart | Multipart[] | undefined,
-): unknown {
-  const value = Array.isArray(field) ? field[0] : field;
-  if (!value || !('value' in value)) {
-    return undefined;
-  }
-  return value.value;
-}
 
 @Controller()
 export class TradesController {

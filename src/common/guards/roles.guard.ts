@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { RequestUser } from '@common/auth/current-user.decorator';
-import type { AppRole } from '@modules/roles/roles.constants';
+import type { AppRole } from '@common/constants/app-role.constants';
 import { ROLES_KEY } from '@common/decorators/roles.decorator';
 
 @Injectable()

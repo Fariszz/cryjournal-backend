@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@common/decorators/roles.decorator';
+import { UserRoleEnum } from '@common/enums/user-role.enum';
 import { ZodValidationPipe } from '@common/validation/zod-validation.pipe';
 import {
   type AdminUsersQuery,
@@ -26,7 +27,7 @@ import { UsersService } from './users.service';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
-@Roles('ADMIN')
+@Roles(UserRoleEnum.ADMIN)
 @Controller('admin/users')
 export class AdminUsersController {
   constructor(private readonly usersService: UsersService) {}

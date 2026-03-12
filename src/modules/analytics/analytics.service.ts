@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
+import { DEFAULT_LIMIT } from '@common/constants/pagination.constants';
+import { TradeTypeEnum } from '@common/enums/trade-type.enum';
+import { TradeWinLossFlagEnum } from '@common/enums/trade-win-loss-flag.enum';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { accounts, instruments, trades } from '../../db/schema';
@@ -39,7 +42,7 @@ export class AnalyticsService {
     accountId?: string | undefined;
   }): Promise<AnalyticsHomeResponse> {
     const conditions = [
-      eq(trades.type, 'executed'),
+      eq(trades.type, TradeTypeEnum.EXECUTED),
       isNull(trades.deletedAt),
       gte(trades.entryDatetime, new Date(input.dateFrom)),
       lte(trades.entryDatetime, new Date(input.dateTo)),
@@ -55,7 +58,7 @@ export class AnalyticsService {
         grossProfit: sql<string>`coalesce(sum(case when ${trades.pnl} > 0 then ${trades.pnl} else 0 end), 0)`,
         grossLoss: sql<string>`coalesce(sum(case when ${trades.pnl} < 0 then ${trades.pnl} else 0 end), 0)`,
         totalTrades: sql<number>`count(*)`,
-        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = 'win' then 1 else 0 end), 0)`,
+        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = ${TradeWinLossFlagEnum.WIN} then 1 else 0 end), 0)`,
         avgWin: sql<string>`coalesce(avg(case when ${trades.pnl} > 0 then ${trades.pnl} end), 0)`,
         avgLoss: sql<string>`coalesce(avg(case when ${trades.pnl} < 0 then ${trades.pnl} end), 0)`,
       })
@@ -87,7 +90,7 @@ export class AnalyticsService {
         session: trades.tradingSession,
         trades: sql<number>`count(*)`,
         netPnl: sql<string>`coalesce(sum(${trades.pnl}), 0)`,
-        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = 'win' then 1 else 0 end), 0)`,
+        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = ${TradeWinLossFlagEnum.WIN} then 1 else 0 end), 0)`,
       })
       .from(trades)
       .where(where)
@@ -114,7 +117,7 @@ export class AnalyticsService {
       .leftJoin(instruments, eq(instruments.id, trades.instrumentId))
       .where(where)
       .orderBy(desc(trades.entryDatetime))
-      .limit(10);
+      .limit(DEFAULT_LIMIT);
 
     const grossProfit = Number(summary?.grossProfit ?? 0);
     const grossLoss = Math.abs(Number(summary?.grossLoss ?? 0));
@@ -171,13 +174,13 @@ export class AnalyticsService {
     const [summary] = await this.db
       .select({
         tradesCount: sql<number>`count(*)`,
-        executedCount: sql<number>`coalesce(sum(case when ${trades.type} = 'executed' then 1 else 0 end), 0)`,
-        missedCount: sql<number>`coalesce(sum(case when ${trades.type} = 'missed' then 1 else 0 end), 0)`,
-        netPnl: sql<string>`coalesce(sum(case when ${trades.type} = 'executed' then ${trades.pnl} else 0 end), 0)`,
-        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = 'win' then 1 else 0 end), 0)`,
-        avgR: sql<string>`coalesce(avg(case when ${trades.type} = 'executed' then ${trades.rMultiple} end), 0)`,
-        grossProfit: sql<string>`coalesce(sum(case when ${trades.type} = 'executed' and ${trades.pnl} > 0 then ${trades.pnl} else 0 end), 0)`,
-        grossLoss: sql<string>`coalesce(sum(case when ${trades.type} = 'executed' and ${trades.pnl} < 0 then ${trades.pnl} else 0 end), 0)`,
+        executedCount: sql<number>`coalesce(sum(case when ${trades.type} = ${TradeTypeEnum.EXECUTED} then 1 else 0 end), 0)`,
+        missedCount: sql<number>`coalesce(sum(case when ${trades.type} = ${TradeTypeEnum.MISSED} then 1 else 0 end), 0)`,
+        netPnl: sql<string>`coalesce(sum(case when ${trades.type} = ${TradeTypeEnum.EXECUTED} then ${trades.pnl} else 0 end), 0)`,
+        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = ${TradeWinLossFlagEnum.WIN} then 1 else 0 end), 0)`,
+        avgR: sql<string>`coalesce(avg(case when ${trades.type} = ${TradeTypeEnum.EXECUTED} then ${trades.rMultiple} end), 0)`,
+        grossProfit: sql<string>`coalesce(sum(case when ${trades.type} = ${TradeTypeEnum.EXECUTED} and ${trades.pnl} > 0 then ${trades.pnl} else 0 end), 0)`,
+        grossLoss: sql<string>`coalesce(sum(case when ${trades.type} = ${TradeTypeEnum.EXECUTED} and ${trades.pnl} < 0 then ${trades.pnl} else 0 end), 0)`,
       })
       .from(trades)
       .where(where);
@@ -189,7 +192,7 @@ export class AnalyticsService {
         trades: sql<number>`count(*)`,
       })
       .from(trades)
-      .where(and(where, eq(trades.type, 'executed')))
+      .where(and(where, eq(trades.type, TradeTypeEnum.EXECUTED)))
       .groupBy(sql`date(${trades.entryDatetime})`)
       .orderBy(asc(sql`date(${trades.entryDatetime})`));
 
@@ -241,7 +244,7 @@ export class AnalyticsService {
       isNull(trades.deletedAt),
       gte(trades.entryDatetime, new Date(input.dateFrom)),
       lte(trades.entryDatetime, new Date(input.dateTo)),
-      eq(trades.type, 'executed'),
+      eq(trades.type, TradeTypeEnum.EXECUTED),
     );
 
     const rows = await this.db
@@ -249,7 +252,7 @@ export class AnalyticsService {
         instrumentId: trades.instrumentId,
         symbol: instruments.symbol,
         tradesCount: sql<number>`count(*)`,
-        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = 'win' then 1 else 0 end), 0)`,
+        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = ${TradeWinLossFlagEnum.WIN} then 1 else 0 end), 0)`,
         expectancy: sql<string>`coalesce(avg(${trades.pnl}), 0)`,
         profitFactor: sql<string>`case
           when abs(sum(case when ${trades.pnl} < 0 then ${trades.pnl} else 0 end)) = 0
@@ -305,7 +308,7 @@ export class AnalyticsService {
         session: trades.tradingSession,
         trades: sql<number>`count(*)`,
         netPnl: sql<string>`coalesce(sum(${trades.pnl}), 0)`,
-        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = 'win' then 1 else 0 end), 0)`,
+        wins: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = ${TradeWinLossFlagEnum.WIN} then 1 else 0 end), 0)`,
       })
       .from(trades)
       .where(
@@ -314,7 +317,7 @@ export class AnalyticsService {
           isNull(trades.deletedAt),
           gte(trades.entryDatetime, new Date(input.dateFrom)),
           lte(trades.entryDatetime, new Date(input.dateTo)),
-          eq(trades.type, 'executed'),
+          eq(trades.type, TradeTypeEnum.EXECUTED),
         ),
       )
       .groupBy(trades.tradingSession);
@@ -347,7 +350,7 @@ export class AnalyticsService {
           isNull(trades.deletedAt),
           gte(trades.entryDatetime, new Date(input.dateFrom)),
           lte(trades.entryDatetime, new Date(input.dateTo)),
-          eq(trades.type, 'executed'),
+          eq(trades.type, TradeTypeEnum.EXECUTED),
         ),
       )
       .groupBy(sql`extract(hour from ${trades.entryDatetime})`)
@@ -376,7 +379,7 @@ export class AnalyticsService {
         and(
           eq(trades.accountId, id),
           isNull(trades.deletedAt),
-          eq(trades.type, 'executed'),
+          eq(trades.type, TradeTypeEnum.EXECUTED),
           sql`to_char(${trades.entryDatetime}, 'YYYY-MM') = ${month}`,
         ),
       )

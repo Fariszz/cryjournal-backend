@@ -1,4 +1,8 @@
-type Direction = 'long' | 'short';
+import { TradeDirectionEnum } from '@common/enums/trade-direction.enum';
+import { TradeHoldingBucketEnum } from '@common/enums/trade-holding-bucket.enum';
+import { TradeWinLossFlagEnum } from '@common/enums/trade-win-loss-flag.enum';
+
+type Direction = TradeDirectionEnum;
 
 export interface TradeMetricInput {
   direction: Direction;
@@ -23,20 +27,20 @@ export function computeHoldingSeconds(entry: Date, exit?: Date): number | null {
 
 export function computeHoldingBucket(
   seconds: number | null,
-): 'scalp' | 'intraday' | 'swing' | 'position' | null {
+): TradeHoldingBucketEnum | null {
   if (seconds === null) {
     return null;
   }
   if (seconds < 15 * 60) {
-    return 'scalp';
+    return TradeHoldingBucketEnum.SCALP;
   }
   if (seconds < 4 * 60 * 60) {
-    return 'intraday';
+    return TradeHoldingBucketEnum.INTRADAY;
   }
   if (seconds < 24 * 60 * 60) {
-    return 'swing';
+    return TradeHoldingBucketEnum.SWING;
   }
-  return 'position';
+  return TradeHoldingBucketEnum.POSITION;
 }
 
 export function computePnl(input: TradeMetricInput): number | null {
@@ -48,7 +52,7 @@ export function computePnl(input: TradeMetricInput): number | null {
     return null;
   }
   const gross =
-    input.direction === 'long'
+    input.direction === TradeDirectionEnum.LONG
       ? (input.exitPrice - input.entryPrice) * input.positionSize
       : (input.entryPrice - input.exitPrice) * input.positionSize;
   const fees =
@@ -68,17 +72,17 @@ export function computeRMultiple(
 
 export function computeWinLossFlag(
   pnl: number | null,
-): 'win' | 'loss' | 'breakeven' | null {
+): TradeWinLossFlagEnum | null {
   if (pnl === null) {
     return null;
   }
   if (pnl > 0) {
-    return 'win';
+    return TradeWinLossFlagEnum.WIN;
   }
   if (pnl < 0) {
-    return 'loss';
+    return TradeWinLossFlagEnum.LOSS;
   }
-  return 'breakeven';
+  return TradeWinLossFlagEnum.BREAKEVEN;
 }
 
 export function computeDecisionQualityScore(

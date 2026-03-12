@@ -5,12 +5,16 @@ import {
 } from '@nestjs/common';
 import { count, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { hashPassword } from '@common/auth/password.util';
+import { MAX_PAGE_SIZE } from '@common/constants/pagination.constants';
+import { AppRolesService } from '@common/services/app-roles.service';
+import type { AppRole } from '@common/constants/app-role.constants';
+import {
+  DEFAULT_USER_ROLE,
+  isAppRole,
+} from '@common/constants/app-role.constants';
 import type { DB } from '@db/client';
 import { InjectDb } from '@db/db.provider';
 import { roles, userRoles, users } from '@db/schema';
-import type { AppRole } from '@modules/roles/roles.constants';
-import { DEFAULT_USER_ROLE, isAppRole } from '@modules/roles/roles.constants';
-import { RolesService } from '@modules/roles/roles.service';
 
 interface UserJoinedRow {
   id: string;
@@ -51,7 +55,7 @@ export interface UsersPaginationResult {
 export class UsersService {
   constructor(
     @InjectDb() private readonly db: DB,
-    private readonly rolesService: RolesService,
+    private readonly appRolesService: AppRolesService,
   ) {}
 
   async findProfileById(id: string): Promise<UserProfile | null> {
@@ -188,7 +192,7 @@ export class UsersService {
 
   async listUsers(page: number, limit: number): Promise<UsersPaginationResult> {
     const normalizedPage = Math.max(1, page);
-    const normalizedLimit = Math.min(Math.max(1, limit), 100);
+    const normalizedLimit = Math.min(Math.max(1, limit), MAX_PAGE_SIZE);
     const offset = (normalizedPage - 1) * normalizedLimit;
 
     const [countResult] = await this.db.select({ total: count() }).from(users);
@@ -268,7 +272,7 @@ export class UsersService {
     }
 
     const uniqueRoles = Array.from(new Set(requestedRoles));
-    const roleIds = await this.rolesService.getRoleIdsByNames(uniqueRoles);
+    const roleIds = await this.appRolesService.getRoleIdsByNames(uniqueRoles);
 
     if (roleIds.length !== uniqueRoles.length) {
       throw new BadRequestException({
@@ -320,7 +324,7 @@ export class UsersService {
     userId: string,
     roleName: AppRole,
   ): Promise<void> {
-    const roleId = await this.rolesService.getRoleIdByName(roleName);
+    const roleId = await this.appRolesService.getRoleIdByName(roleName);
     await this.db
       .insert(userRoles)
       .values({

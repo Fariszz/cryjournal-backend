@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { TradeTypeEnum } from '@common/enums/trade-type.enum';
+import { TradeWinLossFlagEnum } from '@common/enums/trade-win-loss-flag.enum';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import {
@@ -179,10 +181,12 @@ export class StrategiesService {
       .select({
         tradesCount: sql<number>`count(*)`,
         netPnl: sql<string>`coalesce(sum(${trades.pnl}), 0)`,
-        winCount: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = 'win' then 1 else 0 end), 0)`,
+        winCount: sql<number>`coalesce(sum(case when ${trades.winLossFlag} = ${TradeWinLossFlagEnum.WIN} then 1 else 0 end), 0)`,
       })
       .from(trades)
-      .where(and(eq(trades.strategyId, id), eq(trades.type, 'executed')));
+      .where(
+        and(eq(trades.strategyId, id), eq(trades.type, TradeTypeEnum.EXECUTED)),
+      );
 
     const recentTrades = await this.db
       .select({

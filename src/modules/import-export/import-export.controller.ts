@@ -8,18 +8,12 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
-import type { MultipartFile } from '@fastify/multipart';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { hasMultipartFile } from '@common/utils/has-multipart-file.util';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import { ExportQueryDto, exportQuerySchema } from './import-export.schemas';
 import { ImportExportService } from './import-export.service';
-
-function hasMultipartFile(
-  req: FastifyRequest,
-): req is FastifyRequest & { file: () => Promise<MultipartFile | undefined> } {
-  return typeof (req as { file?: unknown }).file === 'function';
-}
 
 @Controller()
 export class ImportExportController {

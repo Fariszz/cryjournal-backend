@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { verifyPassword } from '@common/auth/password.util';
-import type { AppRole } from '@modules/roles/roles.constants';
+import type { AppRole } from '@common/constants/app-role.constants';
 import { UsersService } from '@modules/users/users.service';
 import type { AuthResponse, AuthenticatedUser, JwtPayload } from './auth.types';
 import type { LoginInput } from './schemas/login.schema';

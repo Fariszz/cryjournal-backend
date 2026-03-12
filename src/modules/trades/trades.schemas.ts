@@ -1,11 +1,21 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
+} from '@common/constants/pagination.constants';
+import { TradeDirectionEnum } from '@common/enums/trade-direction.enum';
+import { TradeMarginModeEnum } from '@common/enums/trade-margin-mode.enum';
+import { TradePositionSizeUnitEnum } from '@common/enums/trade-position-size-unit.enum';
+import { TradePositionTypeEnum } from '@common/enums/trade-position-type.enum';
+import { TradeTypeEnum } from '@common/enums/trade-type.enum';
 
 export const tradeBaseSchema = z.object({
   accountId: z.string().uuid(),
-  type: z.enum(['executed', 'missed']),
+  type: z.nativeEnum(TradeTypeEnum),
   instrumentId: z.string().uuid(),
-  direction: z.enum(['long', 'short']),
+  direction: z.nativeEnum(TradeDirectionEnum),
   timezone: z.string().min(1),
   entryDatetime: z.string().datetime(),
   exitDatetime: z.string().datetime().optional(),
@@ -17,13 +27,16 @@ export const tradeBaseSchema = z.object({
   takeProfit: z.coerce.number().optional(),
   dollarRisk: z.coerce.number().optional(),
   positionSize: z.coerce.number().optional(),
-  positionSizeUnit: z.enum(['lot', 'usd', 'contract']).optional(),
+  positionSizeUnit: z.enum(TradePositionSizeUnitEnum).optional(),
   brokerCommission: z.coerce.number().optional(),
   swap: z.coerce.number().optional(),
   fundingFee: z.coerce.number().optional(),
-  positionType: z.enum(['spot', 'futures']).optional(),
+  positionType: z.nativeEnum(TradePositionTypeEnum).optional(),
+  positionTyppe: z
+    .enum([TradePositionTypeEnum.SPOT, TradePositionTypeEnum.FUTURES])
+    .optional(),
   leverage: z.coerce.number().optional(),
-  marginMode: z.enum(['cross', 'isolated']).optional(),
+  marginMode: z.nativeEnum(TradeMarginModeEnum).optional(),
   strategyId: z.string().uuid().optional(),
   thesis: z.string().optional(),
   postAnalysis: z.string().optional(),
@@ -43,7 +56,7 @@ export const tradeBaseSchema = z.object({
 });
 
 export const tradeCreateSchema = tradeBaseSchema.superRefine((value, ctx) => {
-  if (value.type === 'missed') {
+  if (value.type === TradeTypeEnum.MISSED) {
     return;
   }
   if (!value.entryPrice) {
@@ -65,14 +78,19 @@ export const tradeListQuerySchema = z.object({
   account_id: z.string().uuid().optional(),
   instrument_id: z.string().uuid().optional(),
   strategy_id: z.string().uuid().optional(),
-  type: z.enum(['executed', 'missed']).optional(),
+  type: z.nativeEnum(TradeTypeEnum).optional(),
   date_from: z.string().datetime().optional(),
   date_to: z.string().datetime().optional(),
   session: z.string().optional(),
   tags: z.string().optional(),
   demons: z.string().optional(),
-  page: z.coerce.number().int().positive().default(1),
-  page_size: z.coerce.number().int().positive().max(100).default(20),
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  page_size: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(MAX_PAGE_SIZE)
+    .default(DEFAULT_PAGE_SIZE),
 });
 
 export const tradeBulkSchema = z.object({
