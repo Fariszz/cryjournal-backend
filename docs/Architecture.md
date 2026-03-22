@@ -120,7 +120,7 @@ CSV:
 
 ## Configuration Model
 Environment variables are parsed and validated by Zod (`env.schema.ts`) at startup. Key settings include:
-- `DB_URL`
+- `DATABASE_URL`
 - `JWT_SECRET`, `JWT_EXPIRES_IN`
 - Google OAuth credentials and callback URL
 - `UPLOAD_DIR`, `MAX_UPLOAD_BYTES`
