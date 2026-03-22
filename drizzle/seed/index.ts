@@ -7,7 +7,7 @@ import { seedAdmin } from './admin.seed';
 import { seedDummyData } from './dummy.seed';
 
 const seedEnvSchema = z.object({
-  DB_URL: z.string().min(1),
+  DATABASE_URL: z.string().min(1),
   ADMIN_EMAIL: z.email().default('admin@cryjournal.local'),
   ADMIN_PASSWORD: z.string().min(8).default('ChangeMe123!'),
   ADMIN_NAME: z.string().min(1).default('Admin'),
@@ -20,7 +20,7 @@ async function runSeed(): Promise<number> {
     const env = seedEnvSchema.parse(process.env);
 
     pool = new Pool({
-      connectionString: env.DB_URL,
+      connectionString: env.DATABASE_URL,
     });
 
     const db = drizzle(pool, { schema });

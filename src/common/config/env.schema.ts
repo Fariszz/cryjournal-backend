@@ -5,7 +5,7 @@ export const envSchema = z.object({
     .enum(['development', 'test', 'production'])
     .default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
-  DB_URL: z.string().min(1),
+  DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(16).default('local-jwt-secret-change-me'),
   JWT_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
   GOOGLE_CLIENT_ID: z.string().default('replace-google-client-id'),
