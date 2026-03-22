@@ -13,44 +13,86 @@ import { env } from './common/config/env';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
 import { AppLoggerService } from './common/logging/app-logger.service';
 
-async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
+let app: NestFastifyApplication;
 
-  app.useLogger(app.get(AppLoggerService));
-  await app.register(fastifyHelmet);
-  await app.register(fastifyCookie);
-  await app.register(fastifyMultipart, {
-    limits: { fileSize: env.MAX_UPLOAD_BYTES },
-  });
+async function bootstrap() {
+  if (!app) {
+    app = await NestFactory.create<NestFastifyApplication>(
+      AppModule,
+      new FastifyAdapter(),
+    );
 
-  app.setGlobalPrefix('api/v1');
-  app.useGlobalInterceptors(new ApiResponseInterceptor());
-  app.useGlobalFilters(new AllExceptionsFilter());
+    app.useLogger(app.get(AppLoggerService));
+    await app.register(fastifyHelmet);
+    await app.register(fastifyCookie);
+    await app.register(fastifyMultipart, {
+      limits: { fileSize: env.MAX_UPLOAD_BYTES },
+    });
+    app.setGlobalPrefix('api/v1');
+    app.useGlobalInterceptors(new ApiResponseInterceptor());
+    app.useGlobalFilters(new AllExceptionsFilter());
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('CryJournal API')
+      .setDescription('OpenAPI documentation for CryJournal')
+      .setVersion('1.0.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+        'bearer',
+      )
+      .build();
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('docs', app, swaggerDocument, {
+      jsonDocumentUrl: 'docs/openapi.json',
+    });
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('CryJournal API')
-    .setDescription('OpenAPI documentation for CryJournal')
-    .setVersion('1.0.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-      },
-      'bearer',
-    )
-    .build();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, swaggerDocument, {
-    jsonDocumentUrl: 'docs/openapi.json',
-  });
+    await app.init();
+  }
 
-  await app.listen(env.PORT, '0.0.0.0');
+  return app;
+  // app = await NestFactory.create<NestFastifyApplication>(
+  //   AppModule,
+  //   new FastifyAdapter(),
+  // );
+  // app.useLogger(app.get(AppLoggerService));
+  // await app.register(fastifyHelmet);
+  // await app.register(fastifyCookie);
+  // await app.register(fastifyMultipart, {
+  //   limits: { fileSize: env.MAX_UPLOAD_BYTES },
+  // });
+  // app.setGlobalPrefix('api/v1');
+  // app.useGlobalInterceptors(new ApiResponseInterceptor());
+  // app.useGlobalFilters(new AllExceptionsFilter());
+  // const swaggerConfig = new DocumentBuilder()
+  //   .setTitle('CryJournal API')
+  //   .setDescription('OpenAPI documentation for CryJournal')
+  //   .setVersion('1.0.0')
+  //   .addBearerAuth(
+  //     {
+  //       type: 'http',
+  //       scheme: 'bearer',
+  //       bearerFormat: 'JWT',
+  //     },
+  //     'bearer',
+  //   )
+  //   .build();
+  // const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  // SwaggerModule.setup('docs', app, swaggerDocument, {
+  //   jsonDocumentUrl: 'docs/openapi.json',
+  // });
+  // await app.listen(env.PORT, '0.0.0.0');
 }
 void bootstrap().catch((error: unknown) => {
   console.error('Failed to bootstrap application', error);
   process.exit(1);
 });
+
+export default async function handler(req: unknown, res: unknown) {
+  const app = await bootstrap();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const instance = app.getHttpAdapter().getInstance();
+  instance.server.emit('request', req, res);
+}
