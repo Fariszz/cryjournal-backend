@@ -1,0 +1,14 @@
+{
+  "jsc": {
+    "target": "es2022",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": ["./src/common/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@db/*": ["./src/db/*"]
+    }
+  },
+  "module": {
+    "type": "commonjs"
+  }
+}
