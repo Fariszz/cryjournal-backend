@@ -22,7 +22,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "seed": "tsx drizzle/seed/index.ts"
+    "seed": "tsx drizzle/seed/index.ts",
+    "docs:api-endpoints": "tsx scripts/generate-api-endpoints.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -53,6 +54,7 @@
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "uuid": "^13.0.0",
     "winston": "^3.19.0",
     "zod": "^4.3.6"
   },
