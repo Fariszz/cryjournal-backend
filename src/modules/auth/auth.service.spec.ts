@@ -7,7 +7,10 @@ import { AuthService } from './auth.service';
 describe('AuthService', () => {
   let service: AuthService;
 
-  const usersServiceMock: Pick<UsersService, 'findByEmail' | 'createLocalUser'> = {
+  const usersServiceMock: Pick<
+    UsersService,
+    'findByEmail' | 'createLocalUser'
+  > = {
     findByEmail: jest.fn(),
     createLocalUser: jest.fn(),
   };

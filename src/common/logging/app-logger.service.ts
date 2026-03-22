@@ -1,11 +1,32 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { Injectable, LoggerService } from '@nestjs/common';
 import { createLogger, format, transports } from 'winston';
+import { getTraceId } from './trace-context';
+
+const { combine, timestamp, printf, colorize, errors, splat } = format;
 
 @Injectable()
 export class AppLoggerService implements LoggerService {
   private readonly logger = createLogger({
-    level: 'info',
-    format: format.combine(format.timestamp(), format.json()),
+    level: 'debug',
+    format: combine(
+      errors({ stack: true }),
+      splat(),
+
+      timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+
+      colorize({ all: true }),
+
+      printf((info) => {
+        const traceId = getTraceId() || 'no-trace';
+
+        const context = info.context || 'App';
+
+        return `${info.timestamp} [${traceId}] [${context}] ${info.level}: ${info.message}`;
+      }),
+    ),
     transports: [new transports.Console()],
   });
 

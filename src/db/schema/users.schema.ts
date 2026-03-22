@@ -17,6 +17,8 @@ export const users = pgTable(
   },
   (table) => ({
     usersEmailUnique: uniqueIndex('users_email_unique').on(table.email),
-    usersGoogleIdUnique: uniqueIndex('users_google_id_unique').on(table.googleId),
+    usersGoogleIdUnique: uniqueIndex('users_google_id_unique').on(
+      table.googleId,
+    ),
   }),
 );

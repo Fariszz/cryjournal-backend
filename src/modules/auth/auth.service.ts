@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -18,8 +19,13 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  private readonly logger = new Logger(AuthService.name);
+
   async register(input: RegisterInput): Promise<AuthResponse> {
     const existingUser = await this.usersService.findByEmail(input.email);
+
+    this.logger.log(`Attempting to register user with email: ${input.email}`);
+
     if (existingUser) {
       throw new ConflictException({
         error: 'CONFLICT',
