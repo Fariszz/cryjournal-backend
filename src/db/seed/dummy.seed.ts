@@ -2,7 +2,7 @@ import { count } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
 import { seed } from 'drizzle-seed';
-import * as schema from '../../src/db/schema';
+import * as schema from '@db/schema';
 import type { SeedDatabase } from './admin.seed';
 
 const DEFAULT_ROW_COUNT = 6;

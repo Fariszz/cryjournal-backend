@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { hashPassword } from '../../src/common/auth/password.util';
-import * as schema from '../../src/db/schema';
+import * as schema from '@db/schema';
+import { hashPassword } from '@common/auth/password.util';
 
 export type SeedDatabase = NodePgDatabase<typeof schema>;
 

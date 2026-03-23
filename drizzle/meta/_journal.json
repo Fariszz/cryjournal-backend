@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1772219395621,
-      "tag": "0000_tidy_boom_boom",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1774292400000,
-      "tag": "0008_rbac_auth",
+      "when": 1774288767336,
+      "tag": "0000_fine_black_bolt",
       "breakpoints": true
     }
   ]

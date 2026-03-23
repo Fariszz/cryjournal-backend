@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { z } from 'zod';
-import * as schema from '../../src/db/schema';
+import * as schema from '@db/schema';
 import { seedAdmin } from './admin.seed';
 import { seedDummyData } from './dummy.seed';
 

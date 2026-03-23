@@ -109,6 +109,20 @@ CREATE TABLE "daily_journals" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "roles" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar(64) NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "user_roles" (
+	"user_id" uuid NOT NULL,
+	"role_id" uuid NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "user_roles_user_id_role_id_pk" PRIMARY KEY("user_id","role_id")
+);
+--> statement-breakpoint
 CREATE TABLE "app_settings" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"default_timezone" varchar(64) NOT NULL,
@@ -263,8 +277,9 @@ CREATE TABLE "trades" (
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" varchar(255) NOT NULL,
-	"password_hash" varchar(255) NOT NULL,
+	"password_hash" varchar(255),
 	"name" varchar(255) NOT NULL,
+	"google_id" varchar(255),
 	"is_active" boolean DEFAULT true NOT NULL,
 	"failed_login_attempts" integer DEFAULT 0 NOT NULL,
 	"locked_until" timestamp with time zone,
@@ -284,6 +299,8 @@ ALTER TABLE "daily_journal_demons" ADD CONSTRAINT "daily_journal_demons_demon_id
 ALTER TABLE "daily_journal_trades" ADD CONSTRAINT "daily_journal_trades_daily_journal_id_daily_journals_id_fk" FOREIGN KEY ("daily_journal_id") REFERENCES "public"."daily_journals"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "daily_journal_trades" ADD CONSTRAINT "daily_journal_trades_trade_id_trades_id_fk" FOREIGN KEY ("trade_id") REFERENCES "public"."trades"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "daily_journals" ADD CONSTRAINT "daily_journals_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_role_id_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."roles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "strategy_confluences" ADD CONSTRAINT "strategy_confluences_strategy_id_strategies_id_fk" FOREIGN KEY ("strategy_id") REFERENCES "public"."strategies"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "strategy_steps" ADD CONSTRAINT "strategy_steps_strategy_id_strategies_id_fk" FOREIGN KEY ("strategy_id") REFERENCES "public"."strategies"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "trade_attachments" ADD CONSTRAINT "trade_attachments_trade_id_trades_id_fk" FOREIGN KEY ("trade_id") REFERENCES "public"."trades"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -310,6 +327,7 @@ CREATE INDEX "instruments_category_idx" ON "instruments" USING btree ("category"
 CREATE UNIQUE INDEX "daily_journal_demons_unique" ON "daily_journal_demons" USING btree ("daily_journal_id","demon_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "daily_journal_trades_unique" ON "daily_journal_trades" USING btree ("daily_journal_id","trade_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "daily_journals_date_account_unique" ON "daily_journals" USING btree ("date","account_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "roles_name_unique" ON "roles" USING btree ("name");--> statement-breakpoint
 CREATE INDEX "strategy_confluences_strategy_id_idx" ON "strategy_confluences" USING btree ("strategy_id");--> statement-breakpoint
 CREATE INDEX "strategy_confluences_sort_order_idx" ON "strategy_confluences" USING btree ("sort_order");--> statement-breakpoint
 CREATE INDEX "strategy_steps_strategy_id_idx" ON "strategy_steps" USING btree ("strategy_id");--> statement-breakpoint
@@ -326,4 +344,5 @@ CREATE INDEX "trade_tag_pivot_tag_idx" ON "trade_tag_pivot" USING btree ("tag_id
 CREATE INDEX "trades_account_entry_datetime_idx" ON "trades" USING btree ("account_id","entry_datetime");--> statement-breakpoint
 CREATE INDEX "trades_instrument_id_idx" ON "trades" USING btree ("instrument_id");--> statement-breakpoint
 CREATE INDEX "trades_strategy_id_idx" ON "trades" USING btree ("strategy_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "users_email_unique" ON "users" USING btree ("email");
+CREATE UNIQUE INDEX "users_email_unique" ON "users" USING btree ("email");--> statement-breakpoint
+CREATE UNIQUE INDEX "users_google_id_unique" ON "users" USING btree ("google_id");
