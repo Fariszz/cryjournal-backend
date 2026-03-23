@@ -1,98 +1,54 @@
 import { NestFactory } from '@nestjs/core';
-import fastifyCookie from '@fastify/cookie';
-import fastifyHelmet from '@fastify/helmet';
-import fastifyMultipart from '@fastify/multipart';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
-import { env } from './common/config/env';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
 import { AppLoggerService } from './common/logging/app-logger.service';
+import { env } from './common/config/env';
 
-let app: NestFastifyApplication;
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create(AppModule); // ❗ tanpa FastifyAdapter
 
-async function bootstrap() {
-  if (!app) {
-    app = await NestFactory.create<NestFastifyApplication>(
-      AppModule,
-      new FastifyAdapter(),
-    );
+  app.useLogger(app.get(AppLoggerService));
 
-    app.useLogger(app.get(AppLoggerService));
-    await app.register(fastifyHelmet);
-    await app.register(fastifyCookie);
-    await app.register(fastifyMultipart, {
-      limits: { fileSize: env.MAX_UPLOAD_BYTES },
-    });
-    app.setGlobalPrefix('api/v1');
-    app.useGlobalInterceptors(new ApiResponseInterceptor());
-    app.useGlobalFilters(new AllExceptionsFilter());
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle('CryJournal API')
-      .setDescription('OpenAPI documentation for CryJournal')
-      .setVersion('1.0.0')
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-        'bearer',
-      )
-      .build();
-    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('docs', app, swaggerDocument, {
-      jsonDocumentUrl: 'docs/openapi.json',
-    });
+  // Middleware Express
+  app.use(helmet());
+  app.use(cookieParser());
 
-    await app.init();
-  }
+  // Global config
+  app.setGlobalPrefix('api/v1');
+  app.useGlobalInterceptors(new ApiResponseInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
-  return app;
-  // app = await NestFactory.create<NestFastifyApplication>(
-  //   AppModule,
-  //   new FastifyAdapter(),
-  // );
-  // app.useLogger(app.get(AppLoggerService));
-  // await app.register(fastifyHelmet);
-  // await app.register(fastifyCookie);
-  // await app.register(fastifyMultipart, {
-  //   limits: { fileSize: env.MAX_UPLOAD_BYTES },
-  // });
-  // app.setGlobalPrefix('api/v1');
-  // app.useGlobalInterceptors(new ApiResponseInterceptor());
-  // app.useGlobalFilters(new AllExceptionsFilter());
-  // const swaggerConfig = new DocumentBuilder()
-  //   .setTitle('CryJournal API')
-  //   .setDescription('OpenAPI documentation for CryJournal')
-  //   .setVersion('1.0.0')
-  //   .addBearerAuth(
-  //     {
-  //       type: 'http',
-  //       scheme: 'bearer',
-  //       bearerFormat: 'JWT',
-  //     },
-  //     'bearer',
-  //   )
-  //   .build();
-  // const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  // SwaggerModule.setup('docs', app, swaggerDocument, {
-  //   jsonDocumentUrl: 'docs/openapi.json',
-  // });
-  // await app.listen(env.PORT, '0.0.0.0');
+  // Swagger
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('CryJournal API')
+    .setDescription('OpenAPI documentation for CryJournal')
+    .setVersion('1.0.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'bearer',
+    )
+    .build();
+
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, swaggerDocument, {
+    jsonDocumentUrl: 'docs/openapi.json',
+  });
+
+  await app.listen(env.PORT); // ❗ tidak perlu host
 }
+
 void bootstrap().catch((error: unknown) => {
   console.error('Failed to bootstrap application', error);
   process.exit(1);
 });
-
-export default async function handler(req: unknown, res: unknown) {
-  const app = await bootstrap();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const instance = app.getHttpAdapter().getInstance();
-  instance.server.emit('request', req, res);
-}
