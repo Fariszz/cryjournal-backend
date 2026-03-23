@@ -9,6 +9,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { Request as ExpressRequest, Response } from 'express';
 import { hasMultipartFile } from '@common/utils/has-multipart-file.util';
 import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
@@ -20,7 +21,7 @@ export class ImportExportController {
   constructor(private readonly importExportService: ImportExportService) {}
 
   @Post('import/trades')
-  async importTrades(@Req() req: FastifyRequest) {
+  async importTrades(@Req() req: ExpressRequest) {
     if (!hasMultipartFile(req)) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',

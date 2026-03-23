@@ -11,7 +11,8 @@ import {
   Req,
   UsePipes,
 } from '@nestjs/common';
-import type { FastifyRequest } from 'fastify';
+// import type { FastifyRequest } from 'fastify';
+import type { Request as ExpressRequest, Response } from 'express';
 import { z } from 'zod';
 import { hasMultipartFile } from '@common/utils/has-multipart-file.util';
 import { readMultipartField } from '@common/utils/read-multipart-field.util';
@@ -93,7 +94,7 @@ export class JournalsController {
   }
 
   @Post('daily-journal-attachments')
-  async uploadAttachment(@Req() req: FastifyRequest) {
+  async uploadAttachment(@Req() req: ExpressRequest) {
     if (!hasMultipartFile(req)) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',

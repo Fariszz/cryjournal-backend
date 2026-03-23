@@ -7,9 +7,10 @@ import {
   Post,
   UseGuards,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { FastifyRequest } from 'fastify';
+import type { Request as ExpressRequest, Response } from 'express';
 import { ZodValidationPipe } from '@common/validation/zod-validation.pipe';
 import type { RequestUser } from '../../common/auth/current-user.decorator';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
@@ -26,6 +27,8 @@ import { AuthService } from './auth.service';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  private readonly logger = new Logger(AuthController.name);
 
   @Public()
   @Post('register')
@@ -44,6 +47,8 @@ export class AuthController {
     @Body(new ZodValidationPipe(loginSchema)) _body: LoginInput,
     @CurrentUser() user: RequestUser | undefined,
   ) {
+    this.logger.debug(`Login attempt for email: ${_body.email}`);
+
     if (!user) {
       throw new UnauthorizedException({
         error: 'UNAUTHORIZED',
@@ -71,7 +76,7 @@ export class AuthController {
   @Get('google/callback')
   async googleCallback(
     @Request()
-    request: FastifyRequest & {
+    request: ExpressRequest & {
       user?: RequestUser;
     },
   ) {

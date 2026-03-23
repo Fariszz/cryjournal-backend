@@ -22,6 +22,8 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   async register(input: RegisterInput): Promise<AuthResponse> {
+    this.logger.debug(`Attempting to register user with email: ${input.email}`);
+
     const existingUser = await this.usersService.findByEmail(input.email);
 
     this.logger.log(`Attempting to register user with email: ${input.email}`);
