@@ -162,12 +162,8 @@
           "name": "accounts_group_id_account_groups_id_fk",
           "tableFrom": "accounts",
           "tableTo": "account_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -240,12 +236,8 @@
           "name": "demon_evidence_logs_demon_id_demons_id_fk",
           "tableFrom": "demon_evidence_logs",
           "tableTo": "demons",
-          "columnsFrom": [
-            "demon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["demon_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -253,12 +245,8 @@
           "name": "demon_evidence_logs_trade_id_trades_id_fk",
           "tableFrom": "demon_evidence_logs",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -266,12 +254,8 @@
           "name": "demon_evidence_logs_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "demon_evidence_logs",
           "tableTo": "daily_journals",
-          "columnsFrom": [
-            "daily_journal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["daily_journal_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -377,12 +361,8 @@
           "name": "demon_performance_logs_demon_id_demons_id_fk",
           "tableFrom": "demon_performance_logs",
           "tableTo": "demons",
-          "columnsFrom": [
-            "demon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["demon_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -612,12 +592,8 @@
           "name": "daily_journal_attachments_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "daily_journal_attachments",
           "tableTo": "daily_journals",
-          "columnsFrom": [
-            "daily_journal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["daily_journal_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -673,12 +649,8 @@
           "name": "daily_journal_demons_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "daily_journal_demons",
           "tableTo": "daily_journals",
-          "columnsFrom": [
-            "daily_journal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["daily_journal_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -686,12 +658,8 @@
           "name": "daily_journal_demons_demon_id_demons_id_fk",
           "tableFrom": "daily_journal_demons",
           "tableTo": "demons",
-          "columnsFrom": [
-            "demon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["demon_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -747,12 +715,8 @@
           "name": "daily_journal_trades_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "daily_journal_trades",
           "tableTo": "daily_journals",
-          "columnsFrom": [
-            "daily_journal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["daily_journal_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -760,12 +724,8 @@
           "name": "daily_journal_trades_trade_id_trades_id_fk",
           "tableFrom": "daily_journal_trades",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -896,12 +856,8 @@
           "name": "daily_journals_account_id_accounts_id_fk",
           "tableFrom": "daily_journals",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1135,12 +1091,8 @@
           "name": "strategy_confluences_strategy_id_strategies_id_fk",
           "tableFrom": "strategy_confluences",
           "tableTo": "strategies",
-          "columnsFrom": [
-            "strategy_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["strategy_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1223,12 +1175,8 @@
           "name": "strategy_steps_strategy_id_strategies_id_fk",
           "tableFrom": "strategy_steps",
           "tableTo": "strategies",
-          "columnsFrom": [
-            "strategy_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["strategy_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1353,12 +1301,8 @@
           "name": "trade_attachments_trade_id_trades_id_fk",
           "tableFrom": "trade_attachments",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1456,12 +1400,8 @@
           "name": "trade_confluence_checks_trade_id_trades_id_fk",
           "tableFrom": "trade_confluence_checks",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1469,12 +1409,8 @@
           "name": "trade_confluence_checks_confluence_id_strategy_confluences_id_fk",
           "tableFrom": "trade_confluence_checks",
           "tableTo": "strategy_confluences",
-          "columnsFrom": [
-            "confluence_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["confluence_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1552,12 +1488,8 @@
           "name": "trade_context_events_trade_id_trades_id_fk",
           "tableFrom": "trade_context_events",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1643,12 +1575,8 @@
           "name": "trade_demon_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_demon_pivot",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1656,12 +1584,8 @@
           "name": "trade_demon_pivot_demon_id_demons_id_fk",
           "tableFrom": "trade_demon_pivot",
           "tableTo": "demons",
-          "columnsFrom": [
-            "demon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["demon_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1717,12 +1641,8 @@
           "name": "trade_market_condition_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_market_condition_pivot",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1730,12 +1650,8 @@
           "name": "trade_market_condition_pivot_market_condition_id_market_conditions_id_fk",
           "tableFrom": "trade_market_condition_pivot",
           "tableTo": "market_conditions",
-          "columnsFrom": [
-            "market_condition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["market_condition_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1791,12 +1707,8 @@
           "name": "trade_market_condition_tag_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_market_condition_tag_pivot",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1804,12 +1716,8 @@
           "name": "trade_market_condition_tag_pivot_market_condition_tag_id_market_condition_tags_id_fk",
           "tableFrom": "trade_market_condition_tag_pivot",
           "tableTo": "market_condition_tags",
-          "columnsFrom": [
-            "market_condition_tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["market_condition_tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1895,12 +1803,8 @@
           "name": "trade_tag_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_tag_pivot",
           "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trade_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1908,12 +1812,8 @@
           "name": "trade_tag_pivot_tag_id_trade_tags_id_fk",
           "tableFrom": "trade_tag_pivot",
           "tableTo": "trade_tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2253,12 +2153,8 @@
           "name": "trades_account_id_accounts_id_fk",
           "tableFrom": "trades",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2266,12 +2162,8 @@
           "name": "trades_instrument_id_instruments_id_fk",
           "tableFrom": "trades",
           "tableTo": "instruments",
-          "columnsFrom": [
-            "instrument_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["instrument_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2279,12 +2171,8 @@
           "name": "trades_strategy_id_strategies_id_fk",
           "tableFrom": "trades",
           "tableTo": "strategies",
-          "columnsFrom": [
-            "strategy_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["strategy_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2394,71 +2282,42 @@
     "public.account_type": {
       "name": "account_type",
       "schema": "public",
-      "values": [
-        "crypto",
-        "forex",
-        "stocks"
-      ]
+      "values": ["crypto", "forex", "stocks"]
     },
     "public.direction": {
       "name": "direction",
       "schema": "public",
-      "values": [
-        "long",
-        "short"
-      ]
+      "values": ["long", "short"]
     },
     "public.holding_bucket": {
       "name": "holding_bucket",
       "schema": "public",
-      "values": [
-        "scalp",
-        "intraday",
-        "swing",
-        "position"
-      ]
+      "values": ["scalp", "intraday", "swing", "position"]
     },
     "public.margin_mode": {
       "name": "margin_mode",
       "schema": "public",
-      "values": [
-        "cross",
-        "isolated"
-      ]
+      "values": ["cross", "isolated"]
     },
     "public.position_size_unit": {
       "name": "position_size_unit",
       "schema": "public",
-      "values": [
-        "lot",
-        "usd",
-        "contract"
-      ]
+      "values": ["lot", "usd", "contract"]
     },
     "public.position_type": {
       "name": "position_type",
       "schema": "public",
-      "values": [
-        "spot",
-        "futures"
-      ]
+      "values": ["spot", "futures"]
     },
     "public.trade_type": {
       "name": "trade_type",
       "schema": "public",
-      "values": [
-        "executed",
-        "missed"
-      ]
+      "values": ["executed", "missed"]
     },
     "public.win_loss_flag": {
       "name": "win_loss_flag",
       "schema": "public",
-      "values": [
-        "win",
-        "loss",
-        "breakeven"
-      ]
+      "values": ["win", "loss", "breakeven"]
     }
   },
   "schemas": {},
