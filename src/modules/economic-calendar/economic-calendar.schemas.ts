@@ -2,8 +2,8 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const economicCalendarQuerySchema = z.object({
-  from: z.string().datetime(),
-  to: z.string().datetime(),
+  from: z.iso.datetime(),
+  to: z.iso.datetime(),
   impact: z.string().optional(),
   currency: z.string().optional(),
 });
@@ -13,7 +13,7 @@ export const attachContextEventSchema = z.object({
   title: z.string().min(1),
   impact: z.string().optional(),
   currency: z.string().optional(),
-  eventTime: z.string().datetime(),
+  eventTime: z.iso.datetime(),
   raw: z.record(z.string(), z.unknown()).optional(),
 });
 

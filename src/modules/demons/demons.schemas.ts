@@ -17,14 +17,14 @@ export const demonUpdateSchema = demonCreateSchema
   });
 
 export const evidenceCreateSchema = z.object({
-  tradeId: z.string().uuid().optional(),
-  dailyJournalId: z.string().uuid().optional(),
+  tradeId: z.uuid().optional(),
+  dailyJournalId: z.uuid().optional(),
   note: z.string().optional(),
   screenshotPath: z.string().optional(),
 });
 
 export const demonIdParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export class DemonCreateDto extends createZodDto(demonCreateSchema) {}

@@ -12,13 +12,13 @@ import { TradePositionTypeEnum } from '@common/enums/trade-position-type.enum';
 import { TradeTypeEnum } from '@common/enums/trade-type.enum';
 
 export const tradeBaseSchema = z.object({
-  accountId: z.string().uuid(),
-  type: z.nativeEnum(TradeTypeEnum),
-  instrumentId: z.string().uuid(),
-  direction: z.nativeEnum(TradeDirectionEnum),
+  accountId: z.uuid(),
+  type: z.enum(TradeTypeEnum),
+  instrumentId: z.uuid(),
+  direction: z.enum(TradeDirectionEnum),
   timezone: z.string().min(1),
-  entryDatetime: z.string().datetime(),
-  exitDatetime: z.string().datetime().optional(),
+  entryDatetime: z.iso.datetime(),
+  exitDatetime: z.iso.datetime().optional(),
   entryTimeframe: z.string().optional(),
   tradingSession: z.string().optional(),
   entryPrice: z.coerce.number().optional(),
@@ -31,20 +31,20 @@ export const tradeBaseSchema = z.object({
   brokerCommission: z.coerce.number().optional(),
   swap: z.coerce.number().optional(),
   fundingFee: z.coerce.number().optional(),
-  positionType: z.nativeEnum(TradePositionTypeEnum).optional(),
+  positionType: z.enum(TradePositionTypeEnum).optional(),
   positionTyppe: z
     .enum([TradePositionTypeEnum.SPOT, TradePositionTypeEnum.FUTURES])
     .optional(),
   leverage: z.coerce.number().optional(),
-  marginMode: z.nativeEnum(TradeMarginModeEnum).optional(),
-  strategyId: z.string().uuid().optional(),
+  marginMode: z.enum(TradeMarginModeEnum).optional(),
+  strategyId: z.uuid().optional(),
   thesis: z.string().optional(),
   postAnalysis: z.string().optional(),
   notes: z.string().optional(),
   tagIds: z.array(z.string().uuid()).optional(),
   demonIds: z.array(z.string().uuid()).optional(),
-  marketConditionTagIds: z.array(z.string().uuid()).optional(),
-  marketConditionIds: z.array(z.string().uuid()).optional(),
+  marketConditionTagIds: z.array(z.uuid()).optional(),
+  marketConditionIds: z.array(z.uuid()).optional(),
   confluenceChecks: z
     .array(
       z.object({

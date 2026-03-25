@@ -8,12 +8,12 @@ import {
 } from '@common/constants/pagination.constants';
 
 export const dateRangeSchema = z.object({
-  date_from: z.string().datetime(),
-  date_to: z.string().datetime(),
+  date_from: z.iso.datetime(),
+  date_to: z.iso.datetime(),
 });
 
 export const homeAnalyticsQuerySchema = dateRangeSchema.extend({
-  account_id: z.string().uuid().optional(),
+  account_id: z.uuid().optional(),
 });
 
 export const accountAnalyticsQuerySchema = dateRangeSchema.extend({

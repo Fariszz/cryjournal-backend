@@ -8,7 +8,7 @@ import {
 
 export const journalCreateSchema = z.object({
   date: z.string().min(1),
-  accountId: z.string().uuid().optional(),
+  accountId: z.uuid().optional(),
   mood: z.number().min(1).max(5).optional(),
   energy: z.number().min(1).max(5).optional(),
   focus: z.number().min(1).max(5).optional(),

@@ -15,7 +15,7 @@ export const accountGroupUpdateSchema = accountGroupCreateSchema
   });
 
 export const accountCreateSchema = z.object({
-  groupId: z.string().uuid().nullable().optional(),
+  groupId: z.uuid().nullable().optional(),
   name: z.string().min(1),
   broker: z.string().min(1),
   accountType: z.enum(AccountTypeEnum),
@@ -32,7 +32,7 @@ export const accountUpdateSchema = accountCreateSchema
 
 export const accountListSchema = z.object({
   group_id: z.string().uuid().optional(),
-  archived: z.nativeEnum(AccountArchivedQueryEnum).optional(),
+  archived: z.enum(AccountArchivedQueryEnum).optional(),
 });
 
 export const accountGroupIdParamSchema = z.object({
