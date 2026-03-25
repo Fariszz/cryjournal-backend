@@ -34,9 +34,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
                 (body as Record<string, string>)['message'] ??
                 exception.message,
               details: Array.isArray(
-                (body as Record<string, unknown>)['message'],
+                (body as Record<string, unknown>)['details'],
               )
-                ? ((body as Record<string, unknown>)['message'] as unknown[])
+                ? ((body as Record<string, unknown>)['details'] as unknown[])
                 : [],
             };
 
