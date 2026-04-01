@@ -28,6 +28,7 @@
     "alwaysStrict": true,
     "exactOptionalPropertyTypes": true,
     "noEmitOnError": true,
+    "types": ["jest", "node"],
     "paths": {
       "@db/*": ["src/db/*"],
       "@modules/*": ["src/modules/*"],
