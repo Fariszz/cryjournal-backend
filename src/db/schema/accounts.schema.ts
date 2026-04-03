@@ -7,11 +7,15 @@ import {
   updatedAt,
   uuidPk,
 } from './common';
+import { users } from './users.schema';
 
 export const accountGroups = pgTable('account_groups', {
   id: uuidPk(),
   name: varchar('name', { length: 150 }).notNull(),
   description: text('description'),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -23,6 +27,9 @@ export const accounts = pgTable(
     groupId: uuid('group_id').references(() => accountGroups.id, {
       onDelete: 'set null',
     }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 150 }).notNull(),
     broker: varchar('broker', { length: 150 }).notNull(),
     accountType: accountTypeEnum('account_type').notNull(),

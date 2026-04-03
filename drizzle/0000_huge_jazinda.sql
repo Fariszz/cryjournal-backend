@@ -10,6 +10,7 @@ CREATE TABLE "account_groups" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(150) NOT NULL,
 	"description" text,
+	"user_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -17,6 +18,7 @@ CREATE TABLE "account_groups" (
 CREATE TABLE "accounts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"group_id" uuid,
+	"user_id" uuid NOT NULL,
 	"name" varchar(150) NOT NULL,
 	"broker" varchar(150) NOT NULL,
 	"account_type" "account_type" NOT NULL,
@@ -288,7 +290,9 @@ CREATE TABLE "users" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "account_groups" ADD CONSTRAINT "account_groups_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_group_id_account_groups_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."account_groups"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "demon_evidence_logs" ADD CONSTRAINT "demon_evidence_logs_demon_id_demons_id_fk" FOREIGN KEY ("demon_id") REFERENCES "public"."demons"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "demon_evidence_logs" ADD CONSTRAINT "demon_evidence_logs_trade_id_trades_id_fk" FOREIGN KEY ("trade_id") REFERENCES "public"."trades"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "demon_evidence_logs" ADD CONSTRAINT "demon_evidence_logs_daily_journal_id_daily_journals_id_fk" FOREIGN KEY ("daily_journal_id") REFERENCES "public"."daily_journals"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
