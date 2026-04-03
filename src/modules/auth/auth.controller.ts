@@ -8,6 +8,7 @@ import {
   UseGuards,
   UnauthorizedException,
   Logger,
+  UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request as ExpressRequest, Response } from 'express';
@@ -32,9 +33,8 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async register(
-    @Body(new ZodValidationPipe(registerSchema)) body: RegisterInput,
-  ) {
+  @UsePipes(new ZodValidationPipe(registerSchema))
+  async register(@Body() body: RegisterInput) {
     const data = await this.authService.register(body);
     return { data };
   }
@@ -43,12 +43,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(200)
-  async login(
-    @Body(new ZodValidationPipe(loginSchema)) _body: LoginInput,
-    @CurrentUser() user: RequestUser | undefined,
-  ) {
-    this.logger.debug(`Login attempt for email: ${_body.email}`);
-
+  async login(@CurrentUser() user: RequestUser | undefined) {
     if (!user) {
       throw new UnauthorizedException({
         error: 'UNAUTHORIZED',

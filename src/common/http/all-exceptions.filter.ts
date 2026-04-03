@@ -29,7 +29,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
           ? { code: 'HTTP_EXCEPTION', message: body, details: [] }
           : {
               code:
-                (body as Record<string, string>)['error'] ?? 'HTTP_EXCEPTION',
+                (body as Record<string, string>)['error'] ??
+                this.mapStatusToCode(status), // 🔥 tambahin ini,
               message:
                 (body as Record<string, string>)['message'] ??
                 exception.message,
@@ -117,5 +118,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
             }
           : errorWithMetadata.cause,
     };
+  }
+
+  private mapStatusToCode(status: number): string {
+    switch (status) {
+      case 400:
+        return 'BAD_REQUEST';
+      case 401:
+        return 'UNAUTHORIZED';
+      case 403:
+        return 'FORBIDDEN';
+      case 404:
+        return 'NOT_FOUND';
+      default:
+        return 'HTTP_EXCEPTION';
+    }
   }
 }
