@@ -16,26 +16,52 @@ import type { AccountResponse } from './interfaces/account.response';
 export class AccountsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async listGroups(): Promise<AccountGroupResponse[]> {
-    return this.db.select().from(accountGroups);
+  private async ensureGroupBelongsToUser(
+    groupId: string,
+    userId: string,
+  ): Promise<void> {
+    const [group] = await this.db
+      .select({ id: accountGroups.id })
+      .from(accountGroups)
+      .where(
+        and(eq(accountGroups.id, groupId), eq(accountGroups.userId, userId)),
+      )
+      .limit(1);
+
+    if (!group) {
+      throw new NotFoundException({
+        error: 'NOT_FOUND',
+        message: 'Account group not found',
+      });
+    }
   }
 
-  async createGroup(input: AccountGroupCreateDto) {
+  async listGroups(userId: string): Promise<AccountGroupResponse[]> {
+    return this.db
+      .select()
+      .from(accountGroups)
+      .where(eq(accountGroups.userId, userId));
+  }
+
+  async createGroup(input: AccountGroupCreateDto, userId: string) {
     const [created] = await this.db
       .insert(accountGroups)
-      .values(input)
+      .values({
+        ...input,
+        userId,
+      })
       .returning();
     return created;
   }
 
-  async updateGroup(id: string, input: AccountGroupUpdateDto) {
+  async updateGroup(id: string, input: AccountGroupUpdateDto, userId: string) {
     const [updated] = await this.db
       .update(accountGroups)
       .set({
         ...input,
         updatedAt: new Date(),
       })
-      .where(eq(accountGroups.id, id))
+      .where(and(eq(accountGroups.id, id), eq(accountGroups.userId, userId)))
       .returning();
 
     if (!updated) {
@@ -47,11 +73,16 @@ export class AccountsService {
     return updated;
   }
 
-  async createAccount(input: AccountCreateDto) {
+  async createAccount(input: AccountCreateDto, userId: string) {
+    if (input.groupId) {
+      await this.ensureGroupBelongsToUser(input.groupId, userId);
+    }
+
     const [created] = await this.db
       .insert(accounts)
       .values({
         groupId: input.groupId ?? null,
+        userId,
         name: input.name,
         broker: input.broker,
         accountType: input.accountType,
@@ -64,6 +95,7 @@ export class AccountsService {
   }
 
   async listAccounts(query: {
+    userId: string;
     groupId?: string | undefined;
     archived?: boolean | undefined;
   }): Promise<AccountResponse[]> {
@@ -72,7 +104,11 @@ export class AccountsService {
         .select()
         .from(accounts)
         .where(
-          and(eq(accounts.groupId, query.groupId), isNull(accounts.deletedAt)),
+          and(
+            eq(accounts.userId, query.userId),
+            eq(accounts.groupId, query.groupId),
+            isNull(accounts.deletedAt),
+          ),
         );
     }
 
@@ -82,6 +118,7 @@ export class AccountsService {
         .from(accounts)
         .where(
           and(
+            eq(accounts.userId, query.userId),
             eq(accounts.groupId, query.groupId),
             query.archived
               ? isNotNull(accounts.deletedAt)
@@ -94,17 +131,28 @@ export class AccountsService {
       return this.db
         .select()
         .from(accounts)
-        .where(isNotNull(accounts.deletedAt));
+        .where(
+          and(eq(accounts.userId, query.userId), isNotNull(accounts.deletedAt)),
+        );
     }
 
-    return this.db.select().from(accounts).where(isNull(accounts.deletedAt));
+    return this.db
+      .select()
+      .from(accounts)
+      .where(
+        and(eq(accounts.userId, query.userId), isNull(accounts.deletedAt)),
+      );
   }
 
-  async updateAccount(id: string, input: AccountUpdateDto) {
+  async updateAccount(id: string, input: AccountUpdateDto, userId: string) {
+    if (input.groupId !== undefined && input.groupId !== null) {
+      await this.ensureGroupBelongsToUser(input.groupId, userId);
+    }
+
     const [updated] = await this.db
       .update(accounts)
       .set({
-        groupId: input.groupId ?? undefined,
+        groupId: input.groupId === undefined ? undefined : input.groupId,
         name: input.name,
         broker: input.broker,
         accountType: input.accountType,
@@ -116,7 +164,7 @@ export class AccountsService {
             : input.startingBalance.toString(),
         updatedAt: new Date(),
       })
-      .where(eq(accounts.id, id))
+      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
       .returning();
 
     if (!updated) {
@@ -128,11 +176,11 @@ export class AccountsService {
     return updated;
   }
 
-  async archiveAccount(id: string) {
+  async archiveAccount(id: string, userId: string) {
     const [updated] = await this.db
       .update(accounts)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(eq(accounts.id, id))
+      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
       .returning();
     if (!updated) {
       throw new NotFoundException({
@@ -143,11 +191,11 @@ export class AccountsService {
     return updated;
   }
 
-  async restoreAccount(id: string) {
+  async restoreAccount(id: string, userId: string) {
     const [updated] = await this.db
       .update(accounts)
       .set({ deletedAt: null, updatedAt: new Date() })
-      .where(eq(accounts.id, id))
+      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
       .returning();
     if (!updated) {
       throw new NotFoundException({
