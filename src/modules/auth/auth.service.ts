@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { verifyPassword } from '@common/auth/password.util';
+import { hashAccessToken } from '@common/auth/access-token.util';
 import type { AppRole } from '@common/constants/app-role.constants';
 import { UsersService } from '@modules/users/users.service';
 import type { AuthResponse, AuthenticatedUser, JwtPayload } from './auth.types';
@@ -100,6 +101,10 @@ export class AuthService {
     return this.createAuthResponse(input);
   }
 
+  async logout(userId: string): Promise<void> {
+    await this.usersService.updateRefreshTokenHash(userId, null);
+  }
+
   async validateGoogleUser(input: {
     googleId: string;
     email: string;
@@ -144,7 +149,9 @@ export class AuthService {
     };
   }
 
-  private createAuthResponse(user: AuthenticatedUser): AuthResponse {
+  private async createAuthResponse(
+    user: AuthenticatedUser,
+  ): Promise<AuthResponse> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -152,6 +159,9 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
+    const accessTokenHash = hashAccessToken(accessToken);
+
+    await this.usersService.updateRefreshTokenHash(user.id, accessTokenHash);
 
     return {
       accessToken,

@@ -11,7 +11,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { Request as ExpressRequest, Response } from 'express';
+import type { Request as ExpressRequest } from 'express';
 import { ZodValidationPipe } from '@common/validation/zod-validation.pipe';
 import type { RequestUser } from '../../common/auth/current-user.decorator';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
@@ -95,7 +95,15 @@ export class AuthController {
   @ApiBearerAuth()
   @Post('logout')
   @HttpCode(200)
-  logout() {
+  async logout(@CurrentUser() user: RequestUser | undefined) {
+    if (!user) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication is required',
+      });
+    }
+
+    await this.authService.logout(user.id);
     return { data: { success: true } };
   }
 

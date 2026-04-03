@@ -9,10 +9,11 @@ describe('AuthService', () => {
 
   const usersServiceMock: Pick<
     UsersService,
-    'findByEmail' | 'createLocalUser'
+    'findByEmail' | 'createLocalUser' | 'updateRefreshTokenHash'
   > = {
     findByEmail: jest.fn(),
     createLocalUser: jest.fn(),
+    updateRefreshTokenHash: jest.fn(),
   };
 
   const jwtServiceMock: Pick<JwtService, 'sign'> = {
@@ -39,6 +40,9 @@ describe('AuthService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    (usersServiceMock.updateRefreshTokenHash as jest.Mock).mockResolvedValue(
+      undefined,
+    );
   });
 
   it('register returns JWT access token and user profile', async () => {
@@ -70,6 +74,10 @@ describe('AuthService', () => {
         roles: ['USER'],
       },
     });
+    expect(usersServiceMock.updateRefreshTokenHash).toHaveBeenCalledWith(
+      'user-id-1',
+      expect.any(String),
+    );
   });
 
   it('register throws conflict for an existing email', async () => {
@@ -85,5 +93,14 @@ describe('AuthService', () => {
         name: 'User Name',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('logout clears current session token hash', async () => {
+    await service.logout('user-id-1');
+
+    expect(usersServiceMock.updateRefreshTokenHash).toHaveBeenCalledWith(
+      'user-id-1',
+      null,
+    );
   });
 });

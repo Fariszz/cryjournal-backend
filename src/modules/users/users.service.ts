@@ -23,6 +23,7 @@ interface UserJoinedRow {
   googleId: string | null;
   isActive: boolean;
   passwordHash: string | null;
+  refreshTokenHash: string | null;
   createdAt: Date;
   updatedAt: Date;
   roleName: string | null;
@@ -41,6 +42,7 @@ export interface UserProfile {
 
 export interface UserWithPassword extends UserProfile {
   passwordHash: string | null;
+  refreshTokenHash: string | null;
 }
 
 export interface UsersPaginationResult {
@@ -87,6 +89,11 @@ export class UsersService {
     return this.mapJoinedRows(rows);
   }
 
+  async findAuthUserById(id: string): Promise<UserWithPassword | null> {
+    const rows = await this.findJoinedRowsByFilter(eq(users.id, id));
+    return this.mapJoinedRows(rows);
+  }
+
   async findAuthUserByGoogleId(
     googleId: string,
   ): Promise<UserWithPassword | null> {
@@ -94,6 +101,19 @@ export class UsersService {
       eq(users.googleId, googleId),
     );
     return this.mapJoinedRows(rows);
+  }
+
+  async updateRefreshTokenHash(
+    userId: string,
+    refreshTokenHash: string | null,
+  ): Promise<void> {
+    await this.db
+      .update(users)
+      .set({
+        refreshTokenHash,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
   }
 
   async createLocalUser(input: {
@@ -345,6 +365,7 @@ export class UsersService {
         googleId: users.googleId,
         isActive: users.isActive,
         passwordHash: users.passwordHash,
+        refreshTokenHash: users.refreshTokenHash,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
         roleName: roles.name,
@@ -379,6 +400,7 @@ export class UsersService {
       googleId: firstRow.googleId,
       isActive: firstRow.isActive,
       passwordHash: firstRow.passwordHash,
+      refreshTokenHash: firstRow.refreshTokenHash,
       roles: Array.from(uniqueRoles),
       createdAt: firstRow.createdAt,
       updatedAt: firstRow.updatedAt,
