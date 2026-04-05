@@ -23,6 +23,7 @@ import {
   Put,
   Query,
   Req,
+  UnauthorizedException,
   UsePipes,
 } from '@nestjs/common';
 // import type { FastifyRequest } from 'fastify';
@@ -45,6 +46,10 @@ import {
   journalUpdateSchema,
 } from './journals.schemas';
 import { JournalsService } from './journals.service';
+import {
+  CurrentUser,
+  type RequestUser,
+} from '@common/auth/current-user.decorator';
 
 const journalAttachmentFieldsSchema = z.object({
   journal_id: z.preprocess(
@@ -70,6 +75,15 @@ const journalAttachmentFieldsSchema = z.object({
 @Controller()
 export class JournalsController {
   constructor(private readonly journalsService: JournalsService) {}
+  private getCurrentUserId(user: RequestUser | undefined): string {
+    if (!user) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication is required',
+      });
+    }
+    return user.id;
+  }
 
   @Get('daily-journals')
   @ApiOperation({
@@ -118,8 +132,10 @@ export class JournalsController {
   async list(
     @Query()
     query: JournalListQueryDto,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
     const data = await this.journalsService.list({
+      userId: this.getCurrentUserId(user),
       dateFrom: query.date_from,
       dateTo: query.date_to,
       accountId: query.account_id,
@@ -145,8 +161,14 @@ export class JournalsController {
   @ApiBadRequestResponse({ description: 'Request payload is invalid.' })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(journalCreateSchema))
-  async create(@Body() body: JournalCreateDto) {
-    const data = await this.journalsService.create(body);
+  async create(
+    @Body() body: JournalCreateDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.journalsService.create(
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -168,8 +190,14 @@ export class JournalsController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Daily journal was not found.' })
   @UsePipes(new ZodValidationPipe(journalIdParamSchema))
-  async get(@Param() params: JournalIdParamDto) {
-    const data = await this.journalsService.getById(params.id);
+  async get(
+    @Param() params: JournalIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.journalsService.getById(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -203,8 +231,13 @@ export class JournalsController {
   async update(
     @Param() params: JournalIdParamDto,
     @Body() body: JournalUpdateDto,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    const data = await this.journalsService.update(params.id, body);
+    const data = await this.journalsService.update(
+      params.id,
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -223,7 +256,10 @@ export class JournalsController {
     description: 'Multipart upload or form fields are invalid.',
   })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  async uploadAttachment(@Req() req: ExpressRequest) {
+  async uploadAttachment(
+    @Req() req: ExpressRequest,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
     if (!hasMultipartFile(req)) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
@@ -266,6 +302,7 @@ export class JournalsController {
         mimetype: filePart.mimetype,
         data: buffer,
       },
+      this.getCurrentUserId(user),
       parsedFields.data.caption,
     );
     return { data };
@@ -289,8 +326,14 @@ export class JournalsController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Attachment was not found.' })
   @UsePipes(new ZodValidationPipe(journalAttachmentIdParamSchema))
-  async deleteAttachment(@Param() params: JournalAttachmentIdParamDto) {
-    const data = await this.journalsService.deleteAttachment(params.id);
+  async deleteAttachment(
+    @Param() params: JournalAttachmentIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.journalsService.deleteAttachment(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 }

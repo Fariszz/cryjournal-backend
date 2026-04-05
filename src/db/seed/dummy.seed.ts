@@ -119,7 +119,7 @@ async function seedConstrainedTables(db: SeedDatabase): Promise<void> {
     .select({ id: schema.marketConditions.id })
     .from(schema.marketConditions);
   const accountsRows = await db
-    .select({ id: schema.accounts.id })
+    .select({ id: schema.accounts.id, userId: schema.accounts.userId })
     .from(schema.accounts);
   const strategyConfluencesRows = await db
     .select({ id: schema.strategyConfluences.id })
@@ -130,7 +130,10 @@ async function seedConstrainedTables(db: SeedDatabase): Promise<void> {
   const demonIds = demonsRows.map((row) => row.id);
   const marketConditionTagIds = marketConditionTagsRows.map((row) => row.id);
   const marketConditionIds = marketConditionsRows.map((row) => row.id);
-  const accountIds = accountsRows.map((row) => row.id);
+  const accountRefs = accountsRows.map((row) => ({
+    id: row.id,
+    userId: row.userId,
+  }));
   const confluenceIds = strategyConfluencesRows.map((row) => row.id);
 
   if (
@@ -139,7 +142,7 @@ async function seedConstrainedTables(db: SeedDatabase): Promise<void> {
     demonIds.length === 0 ||
     marketConditionTagIds.length === 0 ||
     marketConditionIds.length === 0 ||
-    accountIds.length === 0 ||
+    accountRefs.length === 0 ||
     confluenceIds.length === 0
   ) {
     throw new Error(
@@ -215,8 +218,9 @@ async function seedConstrainedTables(db: SeedDatabase): Promise<void> {
       date.setUTCDate(today.getUTCDate() - (DEFAULT_ROW_COUNT - 1 - index));
 
       return {
+        userId: accountRefs[index % accountRefs.length].userId,
         date: toYmd(date),
-        accountId: accountIds[index % accountIds.length],
+        accountId: accountRefs[index % accountRefs.length].id,
         mood: 1 + (index % 5),
         energy: 1 + ((index + 1) % 5),
         focus: 1 + ((index + 2) % 5),

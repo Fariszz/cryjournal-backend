@@ -1,15 +1,23 @@
 import { Transactional } from '@nestjs-cls/transactional';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { and, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
 import { STORAGE_PROVIDER } from '../../common/storage/storage.provider';
 import type { StorageProvider } from '../../common/storage/storage.provider';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import {
+  accounts,
   dailyJournalAttachments,
   dailyJournalDemons,
   dailyJournalTrades,
   dailyJournals,
+  demons,
+  trades,
 } from '../../db/schema';
 import { JournalCreateDto, JournalUpdateDto } from './journals.schemas';
 import type { JournalDetailResponse } from './interfaces/journal-detail.response';
@@ -23,13 +31,17 @@ export class JournalsService {
   ) {}
 
   async list(input: {
+    userId: string;
     dateFrom?: string | undefined;
     dateTo?: string | undefined;
     accountId?: string | undefined;
     page: number;
     pageSize: number;
   }): Promise<JournalsListResponse> {
-    const conditions = [isNull(dailyJournals.deletedAt)];
+    const conditions = [
+      eq(dailyJournals.userId, input.userId),
+      isNull(dailyJournals.deletedAt),
+    ];
     if (input.accountId) {
       conditions.push(eq(dailyJournals.accountId, input.accountId));
     }
@@ -66,10 +78,18 @@ export class JournalsService {
   }
 
   @Transactional()
-  async create(input: JournalCreateDto) {
+  async create(input: JournalCreateDto, userId: string) {
+    await this.validateJournalRefs({
+      userId,
+      accountId: input.accountId,
+      tradeIds: input.tradeIds,
+      demonIds: input.demonIds,
+    });
+
     const [created] = await this.db
       .insert(dailyJournals)
       .values({
+        userId,
         date: input.date,
         accountId: input.accountId,
         mood: input.mood,
@@ -85,18 +105,25 @@ export class JournalsService {
 
     await this.syncLinks(
       created.id,
+      userId,
       input.tradeIds ?? [],
       input.demonIds ?? [],
     );
 
-    return this.getById(created.id);
+    return this.getById(created.id, userId);
   }
 
-  async getById(id: string): Promise<JournalDetailResponse> {
+  async getById(id: string, userId: string): Promise<JournalDetailResponse> {
     const [journal] = await this.db
       .select()
       .from(dailyJournals)
-      .where(and(eq(dailyJournals.id, id), isNull(dailyJournals.deletedAt)));
+      .where(
+        and(
+          eq(dailyJournals.id, id),
+          eq(dailyJournals.userId, userId),
+          isNull(dailyJournals.deletedAt),
+        ),
+      );
     if (!journal) {
       throw new NotFoundException({
         error: 'NOT_FOUND',
@@ -128,7 +155,15 @@ export class JournalsService {
   }
 
   @Transactional()
-  async update(id: string, input: JournalUpdateDto) {
+  async update(id: string, input: JournalUpdateDto, userId: string) {
+    await this.getById(id, userId);
+    await this.validateJournalRefs({
+      userId,
+      accountId: input.accountId,
+      tradeIds: input.tradeIds,
+      demonIds: input.demonIds,
+    });
+
     const [updated] = await this.db
       .update(dailyJournals)
       .set({
@@ -144,7 +179,13 @@ export class JournalsService {
         nextActions: input.nextActions,
         updatedAt: new Date(),
       })
-      .where(and(eq(dailyJournals.id, id), isNull(dailyJournals.deletedAt)))
+      .where(
+        and(
+          eq(dailyJournals.id, id),
+          eq(dailyJournals.userId, userId),
+          isNull(dailyJournals.deletedAt),
+        ),
+      )
       .returning();
 
     if (!updated) {
@@ -155,18 +196,19 @@ export class JournalsService {
     }
 
     if (input.tradeIds !== undefined || input.demonIds !== undefined) {
-      await this.syncLinks(id, input.tradeIds, input.demonIds);
+      await this.syncLinks(id, userId, input.tradeIds, input.demonIds);
     }
 
-    return this.getById(id);
+    return this.getById(id, userId);
   }
 
   async addAttachment(
     journalId: string,
     file: { filename: string; mimetype: string; data: Buffer },
+    userId: string,
     caption?: string,
   ) {
-    await this.getById(journalId);
+    await this.getById(journalId, userId);
     const safeName = `${Date.now()}-${file.filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const path = await this.storage.save({
       folder: 'journal-attachments',
@@ -185,11 +227,23 @@ export class JournalsService {
     return attachment;
   }
 
-  async deleteAttachment(id: string) {
+  async deleteAttachment(id: string, userId: string) {
     const [attachment] = await this.db
-      .select()
+      .select({
+        id: dailyJournalAttachments.id,
+        filePath: dailyJournalAttachments.filePath,
+      })
       .from(dailyJournalAttachments)
-      .where(eq(dailyJournalAttachments.id, id));
+      .innerJoin(
+        dailyJournals,
+        eq(dailyJournals.id, dailyJournalAttachments.dailyJournalId),
+      )
+      .where(
+        and(
+          eq(dailyJournalAttachments.id, id),
+          eq(dailyJournals.userId, userId),
+        ),
+      );
     if (!attachment) {
       throw new NotFoundException({
         error: 'NOT_FOUND',
@@ -205,9 +259,16 @@ export class JournalsService {
 
   private async syncLinks(
     journalId: string,
+    userId: string,
     tradeIds?: string[],
     demonIds?: string[],
   ) {
+    await this.validateJournalRefs({
+      userId,
+      tradeIds,
+      demonIds,
+    });
+
     if (tradeIds !== undefined) {
       await this.db
         .delete(dailyJournalTrades)
@@ -234,6 +295,69 @@ export class JournalsService {
           demonId,
         })),
       );
+    }
+  }
+
+  private async validateJournalRefs(input: {
+    userId: string;
+    accountId?: string | undefined;
+    tradeIds?: string[] | undefined;
+    demonIds?: string[] | undefined;
+  }): Promise<void> {
+    if (input.accountId) {
+      const [account] = await this.db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(
+          and(
+            eq(accounts.id, input.accountId),
+            eq(accounts.userId, input.userId),
+          ),
+        )
+        .limit(1);
+      if (!account) {
+        throw new BadRequestException({
+          error: 'VALIDATION_ERROR',
+          message: 'Account not found',
+        });
+      }
+    }
+
+    if (input.tradeIds && input.tradeIds.length > 0) {
+      const rows = await this.db
+        .select({ id: trades.id })
+        .from(trades)
+        .where(
+          and(
+            inArray(trades.id, input.tradeIds),
+            eq(trades.userId, input.userId),
+            isNull(trades.deletedAt),
+          ),
+        );
+      if (rows.length !== input.tradeIds.length) {
+        throw new BadRequestException({
+          error: 'VALIDATION_ERROR',
+          message: 'Some trades not found',
+        });
+      }
+    }
+
+    if (input.demonIds && input.demonIds.length > 0) {
+      const rows = await this.db
+        .select({ id: demons.id })
+        .from(demons)
+        .where(
+          and(
+            inArray(demons.id, input.demonIds),
+            eq(demons.userId, input.userId),
+          ),
+        );
+      if (rows.length !== input.demonIds.length) {
+        throw new BadRequestException({
+          error: 'VALIDATION_ERROR',
+          message: 'Some demons not found',
+        });
+      }
     }
   }
 }

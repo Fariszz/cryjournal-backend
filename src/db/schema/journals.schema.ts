@@ -1,4 +1,5 @@
 import {
+  index,
   integer,
   pgTable,
   text,
@@ -10,11 +11,15 @@ import { accounts } from './accounts.schema';
 import { createdAt, deletedAt, metricDate, updatedAt, uuidPk } from './common';
 import { demons } from './demons.schema';
 import { trades } from './trades.schema';
+import { users } from './users.schema';
 
 export const dailyJournals = pgTable(
   'daily_journals',
   {
     id: uuidPk(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: metricDate('date').notNull(),
     accountId: uuid('account_id').references(() => accounts.id, {
       onDelete: 'set null',
@@ -32,7 +37,9 @@ export const dailyJournals = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => ({
+    userIdx: index('daily_journals_user_id_idx').on(table.userId),
     uniqueDateAccount: uniqueIndex('daily_journals_date_account_unique').on(
+      table.userId,
       table.date,
       table.accountId,
     ),
