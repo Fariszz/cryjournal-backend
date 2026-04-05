@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UnauthorizedException,
+  UsePipes,
+} from '@nestjs/common';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import {
   ApiBadRequestResponse,
@@ -16,12 +23,25 @@ import {
   instrumentCreateSchema,
 } from './instruments.schemas';
 import { InstrumentsService } from './instruments.service';
+import {
+  CurrentUser,
+  type RequestUser,
+} from '@common/auth/current-user.decorator';
 
 @ApiTags('Instruments')
 @ApiBearerAuth()
 @Controller('instruments')
 export class InstrumentsController {
   constructor(private readonly instrumentsService: InstrumentsService) {}
+  private getCurrentUserId(user: RequestUser | undefined): string {
+    if (!user) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication is required',
+      });
+    }
+    return user.id;
+  }
 
   @Get()
   @ApiOperation({
@@ -34,8 +54,10 @@ export class InstrumentsController {
     schema: { example: { data: [] } },
   })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  async list() {
-    const data = await this.instrumentsService.list();
+  async list(@CurrentUser() user: RequestUser | undefined) {
+    const data = await this.instrumentsService.list(
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -64,8 +86,14 @@ export class InstrumentsController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiConflictResponse({ description: 'Instrument already exists.' })
   @UsePipes(new ZodValidationPipe(instrumentCreateSchema))
-  async create(@Body() body: InstrumentCreateDto) {
-    const data = await this.instrumentsService.create(body);
+  async create(
+    @Body() body: InstrumentCreateDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.instrumentsService.create(
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 }

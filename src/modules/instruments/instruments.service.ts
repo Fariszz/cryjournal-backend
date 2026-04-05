@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import { instruments } from '../../db/schema';
@@ -10,15 +10,24 @@ import type { InstrumentResponse } from './interfaces/instrument.response';
 export class InstrumentsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async list(): Promise<InstrumentResponse[]> {
-    return this.db.select().from(instruments);
+  async list(userId: string): Promise<InstrumentResponse[]> {
+    return this.db
+      .select()
+      .from(instruments)
+      .where(eq(instruments.userId, userId));
   }
 
-  async create(input: InstrumentCreateDto) {
+  async create(input: InstrumentCreateDto, userId: string) {
+    const normalizedSymbol = input.symbol.toUpperCase();
     const [existing] = await this.db
       .select()
       .from(instruments)
-      .where(eq(instruments.symbol, input.symbol.toUpperCase()));
+      .where(
+        and(
+          eq(instruments.userId, userId),
+          eq(instruments.symbol, normalizedSymbol),
+        ),
+      );
 
     if (existing) {
       return existing;
@@ -27,7 +36,8 @@ export class InstrumentsService {
     const [created] = await this.db
       .insert(instruments)
       .values({
-        symbol: input.symbol.toUpperCase(),
+        userId,
+        symbol: normalizedSymbol,
         category: input.category.toLowerCase(),
       })
       .returning();
@@ -35,19 +45,21 @@ export class InstrumentsService {
     return created;
   }
 
-  async ensureBySymbol(symbol: string, category = 'unknown') {
+  async ensureBySymbol(symbol: string, userId: string, category = 'unknown') {
     const normalized = symbol.toUpperCase();
     const [existing] = await this.db
       .select()
       .from(instruments)
-      .where(eq(instruments.symbol, normalized));
+      .where(
+        and(eq(instruments.userId, userId), eq(instruments.symbol, normalized)),
+      );
 
     if (existing) {
       return existing;
     }
     const [created] = await this.db
       .insert(instruments)
-      .values({ symbol: normalized, category })
+      .values({ userId, symbol: normalized, category })
       .returning();
     return created;
   }
