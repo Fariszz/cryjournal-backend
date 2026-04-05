@@ -1,4 +1,18 @@
 import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import {
   BadRequestException,
   Body,
   Controller,
@@ -36,22 +50,38 @@ import { TradesService } from './trades.service';
 const tradeAttachmentFieldsSchema = z.object({
   trade_id: z.preprocess(
     (value) => (value === undefined || value === null ? '' : String(value)),
-    z.string().uuid(),
+    z
+      .string()
+      .uuid()
+      .describe('Trade identifier in UUID format for attachment upload.'),
   ),
   caption: z.preprocess(
     (value) =>
       value === undefined || value === null || String(value).trim() === ''
         ? undefined
         : String(value),
-    z.string().optional(),
+    z.string().optional().describe('Optional attachment caption text.'),
   ),
 });
 
+@ApiTags('Trades')
+@ApiBearerAuth()
 @Controller()
 export class TradesController {
   constructor(private readonly tradesService: TradesService) {}
 
   @Post('trades')
+  @ApiOperation({
+    summary: 'Create trade',
+    description: 'Creates a new trade record.',
+  })
+  @ApiBody({ type: TradeCreateDto, description: 'Payload to create a trade.' })
+  @ApiCreatedResponse({
+    description: 'Trade created successfully.',
+    schema: { example: { data: {} } },
+  })
+  @ApiBadRequestResponse({ description: 'Request payload is invalid.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(tradeCreateSchema))
   async create(@Body() body: TradeCreateDto) {
     const data = await this.tradesService.create(body);
@@ -59,6 +89,28 @@ export class TradesController {
   }
 
   @Put('trades/:id')
+  @ApiOperation({
+    summary: 'Update trade',
+    description: 'Updates trade fields by identifier.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Trade identifier.',
+    example: '72e52434-a5df-4859-a563-09af31a89b8c',
+  })
+  @ApiBody({
+    type: TradeUpdateDto,
+    description: 'Payload to update trade fields.',
+  })
+  @ApiOkResponse({
+    description: 'Trade updated successfully.',
+    schema: { example: { data: {} } },
+  })
+  @ApiBadRequestResponse({
+    description: 'Path parameter or payload is invalid.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  @ApiNotFoundResponse({ description: 'Trade was not found.' })
   @UsePipes(
     new ZodValidationPipe(tradeIdParamSchema),
     new ZodValidationPipe(tradeUpdateSchema),
@@ -69,6 +121,78 @@ export class TradesController {
   }
 
   @Get('trades')
+  @ApiOperation({
+    summary: 'List trades',
+    description: 'Retrieves paginated trades using optional filters.',
+  })
+  @ApiQuery({
+    name: 'account_id',
+    required: false,
+    description: 'Filter by account ID.',
+  })
+  @ApiQuery({
+    name: 'instrument_id',
+    required: false,
+    description: 'Filter by instrument ID.',
+  })
+  @ApiQuery({
+    name: 'strategy_id',
+    required: false,
+    description: 'Filter by strategy ID.',
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    description: 'Filter by trade type.',
+  })
+  @ApiQuery({
+    name: 'date_from',
+    required: false,
+    description: 'Filter start date-time in ISO 8601 format.',
+  })
+  @ApiQuery({
+    name: 'date_to',
+    required: false,
+    description: 'Filter end date-time in ISO 8601 format.',
+  })
+  @ApiQuery({
+    name: 'session',
+    required: false,
+    description: 'Filter by trading session.',
+  })
+  @ApiQuery({
+    name: 'tags',
+    required: false,
+    description: 'Comma-separated tag identifiers.',
+  })
+  @ApiQuery({
+    name: 'demons',
+    required: false,
+    description: 'Comma-separated demon identifiers.',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number.',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'page_size',
+    required: false,
+    description: 'Number of items per page.',
+    example: 20,
+  })
+  @ApiOkResponse({
+    description: 'Trades retrieved successfully.',
+    schema: {
+      example: {
+        data: [],
+        meta: { page: 1, page_size: 20, total_items: 0, total_pages: 0 },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Query parameters are invalid.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(tradeListQuerySchema))
   async list(@Query() query: TradeListQueryDto) {
     const data = await this.tradesService.list({
@@ -91,6 +215,22 @@ export class TradesController {
   }
 
   @Get('trades/:id')
+  @ApiOperation({
+    summary: 'Get trade by ID',
+    description: 'Retrieves a trade by identifier.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Trade identifier.',
+    example: '72e52434-a5df-4859-a563-09af31a89b8c',
+  })
+  @ApiOkResponse({
+    description: 'Trade retrieved successfully.',
+    schema: { example: { data: {} } },
+  })
+  @ApiBadRequestResponse({ description: 'Path parameter is invalid.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  @ApiNotFoundResponse({ description: 'Trade was not found.' })
   @UsePipes(new ZodValidationPipe(tradeIdParamSchema))
   async get(@Param() params: TradeIdParamDto) {
     const data = await this.tradesService.getById(params.id);
@@ -98,6 +238,20 @@ export class TradesController {
   }
 
   @Post('trades/bulk')
+  @ApiOperation({
+    summary: 'Bulk update trades',
+    description: 'Applies bulk updates to multiple trades.',
+  })
+  @ApiBody({
+    type: TradeBulkDto,
+    description: 'Payload for bulk trade updates.',
+  })
+  @ApiCreatedResponse({
+    description: 'Trades updated successfully.',
+    schema: { example: { data: {} } },
+  })
+  @ApiBadRequestResponse({ description: 'Request payload is invalid.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(tradeBulkSchema))
   async bulk(@Body() body: TradeBulkDto) {
     const data = await this.tradesService.bulkUpdate(body);
@@ -105,6 +259,19 @@ export class TradesController {
   }
 
   @Post('trade-attachments')
+  @ApiOperation({
+    summary: 'Upload trade attachment',
+    description: 'Uploads a multipart attachment and links it to a trade.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiCreatedResponse({
+    description: 'Attachment uploaded successfully.',
+    schema: { example: { data: {} } },
+  })
+  @ApiBadRequestResponse({
+    description: 'Multipart upload or form fields are invalid.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   async uploadAttachment(@Req() req: ExpressRequest) {
     if (!hasMultipartFile(req)) {
       throw new BadRequestException({
@@ -154,6 +321,22 @@ export class TradesController {
   }
 
   @Delete('trade-attachments/:id')
+  @ApiOperation({
+    summary: 'Delete trade attachment',
+    description: 'Removes a trade attachment by identifier.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Trade attachment identifier.',
+    example: '8f4bca66-18d4-4ceb-92a4-c9af5a4e5d4e',
+  })
+  @ApiOkResponse({
+    description: 'Attachment deleted successfully.',
+    schema: { example: { data: {} } },
+  })
+  @ApiBadRequestResponse({ description: 'Path parameter is invalid.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  @ApiNotFoundResponse({ description: 'Attachment was not found.' })
   @UsePipes(new ZodValidationPipe(tradeAttachmentIdParamSchema))
   async deleteAttachment(@Param() params: TradeAttachmentIdParamDto) {
     const data = await this.tradesService.deleteAttachment(params.id);
