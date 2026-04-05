@@ -18,6 +18,7 @@ import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
 import {
   accounts,
+  instruments,
   tradeAttachments,
   tradeConfluenceChecks,
   tradeDemonPivot,
@@ -89,13 +90,14 @@ export class TradesService {
   ) {}
 
   @Transactional()
-  async create(input: TradeCreateDto) {
-    const account = await this.validateTradeInput(input);
+  async create(input: TradeCreateDto, userId: string) {
+    const account = await this.validateTradeInput(input, userId);
     const metricInput = this.buildMetricInput(input);
     const baseMetrics = this.computeMetrics(metricInput);
     const [created] = await this.db
       .insert(trades)
       .values({
+        userId,
         accountId: input.accountId,
         type: input.type,
         instrumentId: input.instrumentId,
@@ -134,6 +136,7 @@ export class TradesService {
 
     const checks = await this.syncConfluenceChecks(
       created.id,
+      userId,
       input.strategyId,
       input.confluenceChecks,
     );
@@ -150,7 +153,7 @@ export class TradesService {
           decisionQualityScore: decisionQuality.toString(),
           updatedAt: new Date(),
         })
-        .where(eq(trades.id, created.id));
+        .where(and(eq(trades.id, created.id), eq(trades.userId, userId)));
     }
 
     await this.syncTradeLinks(created.id, input);
@@ -160,7 +163,7 @@ export class TradesService {
       warnings: this.buildWarnings(input, account.timezone),
     };
 
-    const trade = await this.getById(result.tradeId);
+    const trade = await this.getById(result.tradeId, userId);
     return {
       trade,
       warnings: result.warnings,
@@ -168,8 +171,8 @@ export class TradesService {
   }
 
   @Transactional()
-  async update(id: string, input: TradeUpdateDto) {
-    const existing = await this.mustGetTrade(id);
+  async update(id: string, input: TradeUpdateDto, userId: string) {
+    const existing = await this.mustGetTrade(id, userId);
     const parseOptionalNumber = (value: string | null): number | undefined => {
       return value === null ? undefined : Number(value);
     };
@@ -219,7 +222,7 @@ export class TradesService {
       confluenceChecks: input.confluenceChecks,
     };
 
-    const account = await this.validateTradeInput(merged);
+    const account = await this.validateTradeInput(merged, userId);
     const metricInput = this.buildMetricInput(merged);
     const metrics = this.computeMetrics(metricInput);
 
@@ -261,7 +264,7 @@ export class TradesService {
         holdingBucket: metrics.holdingBucket,
         updatedAt: new Date(),
       })
-      .where(eq(trades.id, id));
+      .where(and(eq(trades.id, id), eq(trades.userId, userId)));
 
     if (
       input.strategyId !== undefined ||
@@ -269,6 +272,7 @@ export class TradesService {
     ) {
       const checks = await this.syncConfluenceChecks(
         id,
+        userId,
         merged.strategyId,
         input.confluenceChecks,
       );
@@ -284,7 +288,7 @@ export class TradesService {
           decisionQualityScore: score === null ? null : score.toString(),
           updatedAt: new Date(),
         })
-        .where(eq(trades.id, id));
+        .where(and(eq(trades.id, id), eq(trades.userId, userId)));
     }
 
     if (
@@ -301,7 +305,7 @@ export class TradesService {
       warnings: this.buildWarnings(merged, account.timezone),
     };
 
-    const trade = await this.getById(result.tradeId);
+    const trade = await this.getById(result.tradeId, userId);
     return {
       trade,
       warnings: result.warnings,
@@ -309,6 +313,7 @@ export class TradesService {
   }
 
   async list(input: {
+    userId: string;
     accountId?: string | undefined;
     instrumentId?: string | undefined;
     strategyId?: string | undefined;
@@ -321,7 +326,10 @@ export class TradesService {
     page: number;
     pageSize: number;
   }): Promise<TradesListResponse> {
-    const conditions = [isNull(trades.deletedAt)];
+    const conditions = [
+      eq(trades.userId, input.userId),
+      isNull(trades.deletedAt),
+    ];
     if (input.accountId) {
       conditions.push(eq(trades.accountId, input.accountId));
     }
@@ -387,8 +395,8 @@ export class TradesService {
     };
   }
 
-  async getById(id: string): Promise<TradeDetailResponse> {
-    const trade = await this.mustGetTrade(id);
+  async getById(id: string, userId: string): Promise<TradeDetailResponse> {
+    const trade = await this.mustGetTrade(id, userId);
     const [attachments, tags, demons, checks] = await Promise.all([
       this.db
         .select()
@@ -413,19 +421,33 @@ export class TradesService {
     };
   }
 
-  async bulkUpdate(input: TradeBulkDto) {
+  async bulkUpdate(input: TradeBulkDto, userId: string) {
+    const ownedTradeRows = await this.db
+      .select({ id: trades.id })
+      .from(trades)
+      .where(
+        and(inArray(trades.id, input.tradeIds), eq(trades.userId, userId)),
+      );
+    const ownedTradeIds = ownedTradeRows.map((row) => row.id);
+    if (ownedTradeIds.length === 0) {
+      return { success: true };
+    }
+
     if (input.strategyId) {
+      await this.strategiesService.getById(input.strategyId, userId);
       await this.db
         .update(trades)
         .set({ strategyId: input.strategyId, updatedAt: new Date() })
-        .where(inArray(trades.id, input.tradeIds));
+        .where(
+          and(inArray(trades.id, ownedTradeIds), eq(trades.userId, userId)),
+        );
     }
 
     if (input.tagIds) {
       await this.db
         .delete(tradeTagPivot)
-        .where(inArray(tradeTagPivot.tradeId, input.tradeIds));
-      const values = input.tradeIds.flatMap((tradeId) =>
+        .where(inArray(tradeTagPivot.tradeId, ownedTradeIds));
+      const values = ownedTradeIds.flatMap((tradeId) =>
         input.tagIds!.map((tagId) => ({ tradeId, tagId })),
       );
       if (values.length > 0) {
@@ -439,9 +461,10 @@ export class TradesService {
   async addAttachment(
     tradeId: string,
     file: { filename: string; mimetype: string; data: Buffer },
+    userId: string,
     caption?: string,
   ) {
-    await this.mustGetTrade(tradeId);
+    await this.mustGetTrade(tradeId, userId);
     const safeName = `${Date.now()}-${file.filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const path = await this.storage.save({
       folder: 'trade-attachments',
@@ -460,11 +483,15 @@ export class TradesService {
     return attachment;
   }
 
-  async deleteAttachment(id: string) {
+  async deleteAttachment(id: string, userId: string) {
     const [attachment] = await this.db
-      .select()
+      .select({
+        id: tradeAttachments.id,
+        filePath: tradeAttachments.filePath,
+      })
       .from(tradeAttachments)
-      .where(eq(tradeAttachments.id, id));
+      .innerJoin(trades, eq(trades.id, tradeAttachments.tradeId))
+      .where(and(eq(tradeAttachments.id, id), eq(trades.userId, userId)));
     if (!attachment) {
       throw new NotFoundException({
         error: 'NOT_FOUND',
@@ -513,16 +540,39 @@ export class TradesService {
     };
   }
 
-  private async validateTradeInput(input: TradeInput) {
+  private async validateTradeInput(input: TradeInput, userId: string) {
     const [account] = await this.db
       .select()
       .from(accounts)
-      .where(eq(accounts.id, input.accountId));
+      .where(
+        and(eq(accounts.id, input.accountId), eq(accounts.userId, userId)),
+      );
     if (!account) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
         message: 'Account not found',
       });
+    }
+
+    const [instrument] = await this.db
+      .select({ id: instruments.id })
+      .from(instruments)
+      .where(
+        and(
+          eq(instruments.id, input.instrumentId),
+          eq(instruments.userId, userId),
+        ),
+      )
+      .limit(1);
+    if (!instrument) {
+      throw new BadRequestException({
+        error: 'VALIDATION_ERROR',
+        message: 'Instrument not found',
+      });
+    }
+
+    if (input.strategyId) {
+      await this.strategiesService.getById(input.strategyId, userId);
     }
 
     if (account.accountType !== AccountTypeEnum.CRYPTO) {
@@ -554,11 +604,20 @@ export class TradesService {
     return warnings;
   }
 
-  private async mustGetTrade(id: string): Promise<TradeResponse> {
+  private async mustGetTrade(
+    id: string,
+    userId: string,
+  ): Promise<TradeResponse> {
     const [trade] = await this.db
       .select()
       .from(trades)
-      .where(and(eq(trades.id, id), isNull(trades.deletedAt)));
+      .where(
+        and(
+          eq(trades.id, id),
+          eq(trades.userId, userId),
+          isNull(trades.deletedAt),
+        ),
+      );
     if (!trade) {
       throw new NotFoundException({
         error: 'NOT_FOUND',
@@ -636,6 +695,7 @@ export class TradesService {
 
   private async syncConfluenceChecks(
     tradeId: string,
+    userId: string,
     strategyId?: string,
     manualChecks?: Array<{ confluenceId: string; checked: boolean }>,
   ) {
@@ -646,7 +706,10 @@ export class TradesService {
       return [];
     }
 
-    const confluences = await this.strategiesService.getConfluences(strategyId);
+    const confluences = await this.strategiesService.getConfluences(
+      strategyId,
+      userId,
+    );
     if (confluences.length === 0) {
       return [];
     }

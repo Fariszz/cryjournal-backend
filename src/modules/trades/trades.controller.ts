@@ -23,6 +23,7 @@ import {
   Put,
   Query,
   Req,
+  UnauthorizedException,
   UsePipes,
 } from '@nestjs/common';
 import type { Request as ExpressRequest, Response } from 'express';
@@ -46,6 +47,10 @@ import {
   tradeUpdateSchema,
 } from './trades.schemas';
 import { TradesService } from './trades.service';
+import {
+  CurrentUser,
+  type RequestUser,
+} from '@common/auth/current-user.decorator';
 
 const tradeAttachmentFieldsSchema = z.object({
   trade_id: z.preprocess(
@@ -69,6 +74,15 @@ const tradeAttachmentFieldsSchema = z.object({
 @Controller()
 export class TradesController {
   constructor(private readonly tradesService: TradesService) {}
+  private getCurrentUserId(user: RequestUser | undefined): string {
+    if (!user) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication is required',
+      });
+    }
+    return user.id;
+  }
 
   @Post('trades')
   @ApiOperation({
@@ -83,8 +97,14 @@ export class TradesController {
   @ApiBadRequestResponse({ description: 'Request payload is invalid.' })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(tradeCreateSchema))
-  async create(@Body() body: TradeCreateDto) {
-    const data = await this.tradesService.create(body);
+  async create(
+    @Body() body: TradeCreateDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.tradesService.create(
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -115,8 +135,16 @@ export class TradesController {
     new ZodValidationPipe(tradeIdParamSchema),
     new ZodValidationPipe(tradeUpdateSchema),
   )
-  async update(@Param() params: TradeIdParamDto, @Body() body: TradeUpdateDto) {
-    const data = await this.tradesService.update(params.id, body);
+  async update(
+    @Param() params: TradeIdParamDto,
+    @Body() body: TradeUpdateDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.tradesService.update(
+      params.id,
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -194,8 +222,12 @@ export class TradesController {
   @ApiBadRequestResponse({ description: 'Query parameters are invalid.' })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(tradeListQuerySchema))
-  async list(@Query() query: TradeListQueryDto) {
+  async list(
+    @Query() query: TradeListQueryDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
     const data = await this.tradesService.list({
+      userId: this.getCurrentUserId(user),
       accountId: query.account_id,
       instrumentId: query.instrument_id,
       strategyId: query.strategy_id,
@@ -232,8 +264,14 @@ export class TradesController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Trade was not found.' })
   @UsePipes(new ZodValidationPipe(tradeIdParamSchema))
-  async get(@Param() params: TradeIdParamDto) {
-    const data = await this.tradesService.getById(params.id);
+  async get(
+    @Param() params: TradeIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.tradesService.getById(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -253,8 +291,14 @@ export class TradesController {
   @ApiBadRequestResponse({ description: 'Request payload is invalid.' })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(tradeBulkSchema))
-  async bulk(@Body() body: TradeBulkDto) {
-    const data = await this.tradesService.bulkUpdate(body);
+  async bulk(
+    @Body() body: TradeBulkDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.tradesService.bulkUpdate(
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -272,7 +316,10 @@ export class TradesController {
     description: 'Multipart upload or form fields are invalid.',
   })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  async uploadAttachment(@Req() req: ExpressRequest) {
+  async uploadAttachment(
+    @Req() req: ExpressRequest,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
     if (!hasMultipartFile(req)) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
@@ -315,6 +362,7 @@ export class TradesController {
         mimetype: filePart.mimetype,
         data: buffer,
       },
+      this.getCurrentUserId(user),
       parsedFields.data.caption,
     );
     return { data };
@@ -338,8 +386,14 @@ export class TradesController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Attachment was not found.' })
   @UsePipes(new ZodValidationPipe(tradeAttachmentIdParamSchema))
-  async deleteAttachment(@Param() params: TradeAttachmentIdParamDto) {
-    const data = await this.tradesService.deleteAttachment(params.id);
+  async deleteAttachment(
+    @Param() params: TradeAttachmentIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.tradesService.deleteAttachment(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 }

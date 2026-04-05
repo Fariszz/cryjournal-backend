@@ -29,11 +29,15 @@ import {
 import { instruments } from './instruments.schema';
 import { strategyConfluences, strategies } from './strategies.schema';
 import { demons } from './demons.schema';
+import { users } from './users.schema';
 
 export const trades = pgTable(
   'trades',
   {
     id: uuidPk(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     accountId: uuid('account_id')
       .notNull()
       .references(() => accounts.id),
@@ -79,6 +83,10 @@ export const trades = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => ({
+    userEntryIdx: index('trades_user_entry_datetime_idx').on(
+      table.userId,
+      table.entryDatetime,
+    ),
     accountEntryIdx: index('trades_account_entry_datetime_idx').on(
       table.accountId,
       table.entryDatetime,
