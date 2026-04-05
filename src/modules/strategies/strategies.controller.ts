@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  UnauthorizedException,
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
@@ -31,12 +32,25 @@ import {
   updateStrategySchema,
 } from './strategies.schemas';
 import { StrategiesService } from './strategies.service';
+import {
+  CurrentUser,
+  type RequestUser,
+} from '@common/auth/current-user.decorator';
 
 @ApiTags('Strategies')
 @ApiBearerAuth()
 @Controller('strategies')
 export class StrategiesController {
   constructor(private readonly strategiesService: StrategiesService) {}
+  private getCurrentUserId(user: RequestUser | undefined): string {
+    if (!user) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication is required',
+      });
+    }
+    return user.id;
+  }
 
   @Get()
   @ApiOperation({
@@ -48,8 +62,8 @@ export class StrategiesController {
     schema: { example: { data: [] } },
   })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  async list() {
-    const data = await this.strategiesService.list();
+  async list(@CurrentUser() user: RequestUser | undefined) {
+    const data = await this.strategiesService.list(this.getCurrentUserId(user));
     return { data };
   }
 
@@ -70,8 +84,14 @@ export class StrategiesController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiConflictResponse({ description: 'Strategy already exists.' })
   @UsePipes(new ZodValidationPipe(createStrategySchema))
-  async create(@Body() body: StrategyCreateDto) {
-    const data = await this.strategiesService.create(body);
+  async create(
+    @Body() body: StrategyCreateDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.strategiesService.create(
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -93,8 +113,14 @@ export class StrategiesController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Strategy was not found.' })
   @UsePipes(new ZodValidationPipe(strategyIdParamSchema))
-  async get(@Param() params: StrategyIdParamDto) {
-    const data = await this.strategiesService.getById(params.id);
+  async get(
+    @Param() params: StrategyIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.strategiesService.getById(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -128,8 +154,13 @@ export class StrategiesController {
   async update(
     @Param() params: StrategyIdParamDto,
     @Body() body: StrategyUpdateDto,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    const data = await this.strategiesService.update(params.id, body);
+    const data = await this.strategiesService.update(
+      params.id,
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -151,8 +182,14 @@ export class StrategiesController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Strategy was not found.' })
   @UsePipes(new ZodValidationPipe(strategyIdParamSchema))
-  async remove(@Param() params: StrategyIdParamDto) {
-    const data = await this.strategiesService.remove(params.id);
+  async remove(
+    @Param() params: StrategyIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.strategiesService.remove(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -174,8 +211,14 @@ export class StrategiesController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Strategy was not found.' })
   @UsePipes(new ZodValidationPipe(strategyIdParamSchema))
-  async analytics(@Param() params: StrategyIdParamDto) {
-    const data = await this.strategiesService.analytics(params.id);
+  async analytics(
+    @Param() params: StrategyIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.strategiesService.analytics(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 }

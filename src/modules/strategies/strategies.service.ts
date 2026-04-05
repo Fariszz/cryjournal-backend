@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { TradeTypeEnum } from '@common/enums/trade-type.enum';
 import { TradeWinLossFlagEnum } from '@common/enums/trade-win-loss-flag.enum';
 import { InjectDb } from '../../db/db.provider';
@@ -28,14 +28,18 @@ import type { StrategyResponse } from './interfaces/strategy.response';
 export class StrategiesService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async list(): Promise<StrategyResponse[]> {
-    return this.db.select().from(strategies);
+  async list(userId: string): Promise<StrategyResponse[]> {
+    return this.db
+      .select()
+      .from(strategies)
+      .where(eq(strategies.userId, userId));
   }
 
-  async create(input: StrategyCreateDto) {
+  async create(input: StrategyCreateDto, userId: string) {
     const [strategy] = await this.db
       .insert(strategies)
       .values({
+        userId,
         name: input.name,
         description: input.description,
         tags: input.tags,
@@ -67,14 +71,14 @@ export class StrategiesService {
       );
     }
 
-    return this.getById(strategy.id);
+    return this.getById(strategy.id, userId);
   }
 
-  async getById(id: string): Promise<StrategyDetailResponse> {
+  async getById(id: string, userId: string): Promise<StrategyDetailResponse> {
     const [strategy] = await this.db
       .select()
       .from(strategies)
-      .where(eq(strategies.id, id));
+      .where(and(eq(strategies.id, id), eq(strategies.userId, userId)));
     if (!strategy) {
       throw new NotFoundException({
         error: 'NOT_FOUND',
@@ -101,7 +105,7 @@ export class StrategiesService {
     };
   }
 
-  async update(id: string, input: StrategyUpdateDto) {
+  async update(id: string, input: StrategyUpdateDto, userId: string) {
     const [updated] = await this.db
       .update(strategies)
       .set({
@@ -111,7 +115,7 @@ export class StrategiesService {
         playbookScoreSchema: input.playbookScoreSchema,
         updatedAt: new Date(),
       })
-      .where(eq(strategies.id, id))
+      .where(and(eq(strategies.id, id), eq(strategies.userId, userId)))
       .returning();
 
     if (!updated) {
@@ -155,14 +159,14 @@ export class StrategiesService {
       }
     }
 
-    return this.getById(id);
+    return this.getById(id, userId);
   }
 
-  async remove(id: string): Promise<ActionSuccessResponse> {
+  async remove(id: string, userId: string): Promise<ActionSuccessResponse> {
     const [linked] = await this.db
       .select({ id: trades.id })
       .from(trades)
-      .where(eq(trades.strategyId, id))
+      .where(and(eq(trades.strategyId, id), eq(trades.userId, userId)))
       .limit(1);
 
     if (linked) {
@@ -172,11 +176,25 @@ export class StrategiesService {
       });
     }
 
-    await this.db.delete(strategies).where(eq(strategies.id, id));
+    const [deleted] = await this.db
+      .delete(strategies)
+      .where(and(eq(strategies.id, id), eq(strategies.userId, userId)))
+      .returning({ id: strategies.id });
+    if (!deleted) {
+      throw new NotFoundException({
+        error: 'NOT_FOUND',
+        message: 'Strategy not found',
+      });
+    }
     return { success: true };
   }
 
-  async analytics(id: string): Promise<StrategyAnalyticsResponse> {
+  async analytics(
+    id: string,
+    userId: string,
+  ): Promise<StrategyAnalyticsResponse> {
+    await this.getById(id, userId);
+
     const [summary] = await this.db
       .select({
         tradesCount: sql<number>`count(*)`,
@@ -185,7 +203,11 @@ export class StrategiesService {
       })
       .from(trades)
       .where(
-        and(eq(trades.strategyId, id), eq(trades.type, TradeTypeEnum.EXECUTED)),
+        and(
+          eq(trades.strategyId, id),
+          eq(trades.userId, userId),
+          eq(trades.type, TradeTypeEnum.EXECUTED),
+        ),
       );
 
     const recentTrades = await this.db
@@ -197,7 +219,7 @@ export class StrategiesService {
         entryDatetime: trades.entryDatetime,
       })
       .from(trades)
-      .where(eq(trades.strategyId, id))
+      .where(and(eq(trades.strategyId, id), eq(trades.userId, userId)))
       .orderBy(desc(trades.entryDatetime))
       .limit(25);
 
@@ -216,7 +238,9 @@ export class StrategiesService {
 
   async getConfluences(
     strategyId: string,
+    userId: string,
   ): Promise<StrategyConfluenceResponse[]> {
+    await this.getById(strategyId, userId);
     return this.db
       .select()
       .from(strategyConfluences)

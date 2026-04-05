@@ -8,18 +8,28 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { createdAt, numericRatio, updatedAt, uuidPk } from './common';
+import { users } from './users.schema';
 
-export const strategies = pgTable('strategies', {
-  id: uuidPk(),
-  name: varchar('name', { length: 150 }).notNull(),
-  description: text('description'),
-  tags: jsonb('tags').$type<string[]>().notNull().default([]),
-  playbookScoreSchema: jsonb('playbook_score_schema').$type<
-    Record<string, unknown>
-  >(),
-  createdAt: createdAt(),
-  updatedAt: updatedAt(),
-});
+export const strategies = pgTable(
+  'strategies',
+  {
+    id: uuidPk(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 150 }).notNull(),
+    description: text('description'),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    playbookScoreSchema: jsonb('playbook_score_schema').$type<
+      Record<string, unknown>
+    >(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => ({
+    userIdx: index('strategies_user_id_idx').on(table.userId),
+  }),
+);
 
 export const strategySteps = pgTable(
   'strategy_steps',
