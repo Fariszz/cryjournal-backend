@@ -17,6 +17,7 @@ import {
   Query,
   Req,
   Res,
+  UnauthorizedException,
   UsePipes,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -26,12 +27,25 @@ import { env } from '../../common/config/env';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
 import { ExportQueryDto, exportQuerySchema } from './import-export.schemas';
 import { ImportExportService } from './import-export.service';
+import {
+  CurrentUser,
+  type RequestUser,
+} from '@common/auth/current-user.decorator';
 
 @ApiTags('Import Export')
 @ApiBearerAuth()
 @Controller()
 export class ImportExportController {
   constructor(private readonly importExportService: ImportExportService) {}
+  private getCurrentUserId(user: RequestUser | undefined): string {
+    if (!user) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication is required',
+      });
+    }
+    return user.id;
+  }
 
   @Post('import/trades')
   @ApiOperation({
@@ -54,7 +68,10 @@ export class ImportExportController {
     description: 'Multipart upload is invalid or file content is malformed.',
   })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  async importTrades(@Req() req: ExpressRequest) {
+  async importTrades(
+    @Req() req: ExpressRequest,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
     if (!hasMultipartFile(req)) {
       throw new BadRequestException({
         error: 'VALIDATION_ERROR',
@@ -79,7 +96,10 @@ export class ImportExportController {
     }
 
     const content = buffer.toString('utf8');
-    const data = await this.importExportService.importTradesCsv(content);
+    const data = await this.importExportService.importTradesCsv(
+      content,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -114,8 +134,10 @@ export class ImportExportController {
   async exportTrades(
     @Query() query: ExportQueryDto,
     @Res({ passthrough: true }) reply: FastifyReply,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
     const csv = await this.importExportService.exportTradesCsv({
+      userId: this.getCurrentUserId(user),
       dateFrom: query.date_from,
       dateTo: query.date_to,
     });
@@ -154,8 +176,10 @@ export class ImportExportController {
   async exportJournals(
     @Query() query: ExportQueryDto,
     @Res({ passthrough: true }) reply: FastifyReply,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
     const csv = await this.importExportService.exportJournalsCsv({
+      userId: this.getCurrentUserId(user),
       dateFrom: query.date_from,
       dateTo: query.date_to,
     });

@@ -85,7 +85,7 @@ export class ImportExportService {
     private readonly tradesService: TradesService,
   ) {}
 
-  async importTradesCsv(content: string) {
+  async importTradesCsv(content: string, userId: string) {
     const rows = parseCsv(content);
     const imported: string[] = [];
     const errors: Array<{ row: number; message: string }> = [];
@@ -107,36 +107,45 @@ export class ImportExportService {
         const [account] = await this.db
           .select()
           .from(accounts)
-          .where(eq(accounts.name, value.account_name));
+          .where(
+            and(
+              eq(accounts.name, value.account_name),
+              eq(accounts.userId, userId),
+            ),
+          );
         if (!account) {
           throw new Error(`Unknown account: ${value.account_name}`);
         }
         const instrument = await this.instrumentsService.ensureBySymbol(
           value.symbol,
+          userId,
           value.category ?? 'unknown',
         );
 
         const timezone = value.timezone ?? account.timezone;
-        const created = await this.tradesService.create({
-          accountId: account.id,
-          type: value.type,
-          instrumentId: instrument.id,
-          direction: value.direction,
-          timezone,
-          entryDatetime: new Date(value.entry_datetime).toISOString(),
-          exitDatetime: value.exit_datetime
-            ? new Date(value.exit_datetime).toISOString()
-            : undefined,
-          entryPrice: value.entry_price,
-          exitPrice: value.exit_price,
-          stopLoss: value.stop_loss,
-          takeProfit: value.take_profit,
-          dollarRisk: value.dollar_risk,
-          positionSize: value.position_size,
-          notes: value.notes,
-          entryTimeframe: value.entry_timeframe,
-          tradingSession: value.trading_session,
-        });
+        const created = await this.tradesService.create(
+          {
+            accountId: account.id,
+            type: value.type,
+            instrumentId: instrument.id,
+            direction: value.direction,
+            timezone,
+            entryDatetime: new Date(value.entry_datetime).toISOString(),
+            exitDatetime: value.exit_datetime
+              ? new Date(value.exit_datetime).toISOString()
+              : undefined,
+            entryPrice: value.entry_price,
+            exitPrice: value.exit_price,
+            stopLoss: value.stop_loss,
+            takeProfit: value.take_profit,
+            dollarRisk: value.dollar_risk,
+            positionSize: value.position_size,
+            notes: value.notes,
+            entryTimeframe: value.entry_timeframe,
+            tradingSession: value.trading_session,
+          },
+          userId,
+        );
         imported.push(created.trade.id);
       } catch (error) {
         errors.push({
@@ -154,10 +163,14 @@ export class ImportExportService {
   }
 
   async exportTradesCsv(input: {
+    userId: string;
     dateFrom?: string | undefined;
     dateTo?: string | undefined;
   }) {
-    const conditions = [isNull(trades.deletedAt)];
+    const conditions = [
+      eq(trades.userId, input.userId),
+      isNull(trades.deletedAt),
+    ];
     if (input.dateFrom) {
       conditions.push(gte(trades.entryDatetime, new Date(input.dateFrom)));
     }
@@ -187,10 +200,14 @@ export class ImportExportService {
   }
 
   async exportJournalsCsv(input: {
+    userId: string;
     dateFrom?: string | undefined;
     dateTo?: string | undefined;
   }) {
-    const conditions = [isNull(dailyJournals.deletedAt)];
+    const conditions = [
+      eq(dailyJournals.userId, input.userId),
+      isNull(dailyJournals.deletedAt),
+    ];
     if (input.dateFrom) {
       conditions.push(gte(dailyJournals.date, input.dateFrom));
     }
