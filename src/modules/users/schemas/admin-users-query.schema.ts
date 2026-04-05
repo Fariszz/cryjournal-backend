@@ -6,13 +6,19 @@ import {
 } from '@common/constants/pagination.constants';
 
 export const adminUsersQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(DEFAULT_PAGE),
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .default(DEFAULT_PAGE)
+    .describe('Page number for paginated user listing (minimum 1).'),
   limit: z.coerce
     .number()
     .int()
     .min(1)
     .max(MAX_PAGE_SIZE)
-    .default(DEFAULT_PAGE_SIZE),
+    .default(DEFAULT_PAGE_SIZE)
+    .describe(`Number of items per page (maximum ${MAX_PAGE_SIZE}).`),
 });
 
 export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
