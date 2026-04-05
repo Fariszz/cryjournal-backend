@@ -15,43 +15,54 @@ const optionalNumberSchema = z.preprocess((value) => {
     return undefined;
   }
   return value;
-}, z.coerce.number().optional());
+}, z.coerce.number().optional().describe('Optional numeric value from CSV cell.'));
 
 const optionalStringSchema = z.preprocess((value) => {
   if (typeof value === 'string' && value.trim() === '') {
     return undefined;
   }
   return value;
-}, z.string().optional());
+}, z.string().optional().describe('Optional string value from CSV cell.'));
 
 const datetimeStringSchema = z
   .string()
   .min(1)
   .refine((value) => !Number.isNaN(Date.parse(value)), {
     message: 'must be a valid datetime string',
-  });
+  })
+  .describe('Date-time string that can be parsed into a valid date.');
 
 const optionalDatetimeStringSchema = z.preprocess((value) => {
   if (typeof value === 'string' && value.trim() === '') {
     return undefined;
   }
   return value;
-}, datetimeStringSchema.optional());
+}, datetimeStringSchema.optional().describe('Optional date-time string from CSV cell.'));
 
 const csvTradeRowSchema = z.object({
-  account_name: z.string().min(1),
-  symbol: z.string().min(1),
+  account_name: z
+    .string()
+    .min(1)
+    .describe(
+      'Account name mapped to an existing account (minimum 1 character).',
+    ),
+  symbol: z
+    .string()
+    .min(1)
+    .describe('Instrument symbol (minimum 1 character).'),
   category: optionalStringSchema,
   type: z
     .string()
     .optional()
     .transform((value) => value?.toLowerCase() ?? TradeTypeEnum.EXECUTED)
-    .pipe(z.enum(TradeTypeEnum)),
+    .pipe(z.enum(TradeTypeEnum))
+    .describe('Trade type value normalized from CSV input.'),
   direction: z
     .string()
     .optional()
     .transform((value) => value?.toLowerCase() ?? TradeDirectionEnum.LONG)
-    .pipe(z.enum(TradeDirectionEnum)),
+    .pipe(z.enum(TradeDirectionEnum))
+    .describe('Trade direction value normalized from CSV input.'),
   timezone: optionalStringSchema,
   entry_datetime: datetimeStringSchema,
   exit_datetime: optionalDatetimeStringSchema,
