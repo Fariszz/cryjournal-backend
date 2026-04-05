@@ -2,7 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
 import { InjectDb } from '../../db/db.provider';
 import type { DB } from '../../db/client';
-import { demonEvidenceLogs, demonPerformanceLogs, demons } from '@db/schema';
+import {
+  dailyJournals,
+  demonEvidenceLogs,
+  demonPerformanceLogs,
+  demons,
+  trades,
+} from '@db/schema';
 import {
   DemonCreateDto,
   DemonUpdateDto,
@@ -16,14 +22,15 @@ import type { DemonResponse } from './interfaces/demon.response';
 export class DemonsService {
   constructor(@InjectDb() private readonly db: DB) {}
 
-  async list(): Promise<DemonResponse[]> {
-    return this.db.select().from(demons);
+  async list(userId: string): Promise<DemonResponse[]> {
+    return this.db.select().from(demons).where(eq(demons.userId, userId));
   }
 
-  async create(input: DemonCreateDto) {
+  async create(input: DemonCreateDto, userId: string) {
     const [created] = await this.db
       .insert(demons)
       .values({
+        userId,
         name: input.name,
         trigger: input.trigger,
         pattern: input.pattern,
@@ -35,11 +42,11 @@ export class DemonsService {
     return created;
   }
 
-  async getById(id: string): Promise<DemonResponse> {
+  async getById(id: string, userId: string): Promise<DemonResponse> {
     const [demon] = await this.db
       .select()
       .from(demons)
-      .where(eq(demons.id, id));
+      .where(and(eq(demons.id, id), eq(demons.userId, userId)));
     if (!demon) {
       throw new NotFoundException({
         error: 'NOT_FOUND',
@@ -49,14 +56,14 @@ export class DemonsService {
     return demon;
   }
 
-  async update(id: string, input: DemonUpdateDto) {
+  async update(id: string, input: DemonUpdateDto, userId: string) {
     const [updated] = await this.db
       .update(demons)
       .set({
         ...input,
         updatedAt: new Date(),
       })
-      .where(eq(demons.id, id))
+      .where(and(eq(demons.id, id), eq(demons.userId, userId)))
       .returning();
     if (!updated) {
       throw new NotFoundException({
@@ -67,8 +74,18 @@ export class DemonsService {
     return updated;
   }
 
-  async createEvidence(demonId: string, input: EvidenceCreateDto) {
-    await this.getById(demonId);
+  async createEvidence(
+    demonId: string,
+    input: EvidenceCreateDto,
+    userId: string,
+  ) {
+    await this.getById(demonId, userId);
+    if (input.tradeId) {
+      await this.ensureTradeBelongsToUser(input.tradeId, userId);
+    }
+    if (input.dailyJournalId) {
+      await this.ensureJournalBelongsToUser(input.dailyJournalId, userId);
+    }
     const [created] = await this.db
       .insert(demonEvidenceLogs)
       .values({
@@ -82,8 +99,11 @@ export class DemonsService {
     return created;
   }
 
-  async listEvidence(demonId: string): Promise<DemonEvidenceLogResponse[]> {
-    await this.getById(demonId);
+  async listEvidence(
+    demonId: string,
+    userId: string,
+  ): Promise<DemonEvidenceLogResponse[]> {
+    await this.getById(demonId, userId);
     return this.db
       .select()
       .from(demonEvidenceLogs)
@@ -91,12 +111,53 @@ export class DemonsService {
       .orderBy(desc(demonEvidenceLogs.createdAt));
   }
 
-  async performance(demonId: string): Promise<DemonPerformanceLogResponse[]> {
-    await this.getById(demonId);
+  async performance(
+    demonId: string,
+    userId: string,
+  ): Promise<DemonPerformanceLogResponse[]> {
+    await this.getById(demonId, userId);
     return this.db
       .select()
       .from(demonPerformanceLogs)
       .where(eq(demonPerformanceLogs.demonId, demonId))
       .orderBy(desc(demonPerformanceLogs.date));
+  }
+
+  private async ensureTradeBelongsToUser(
+    tradeId: string,
+    userId: string,
+  ): Promise<void> {
+    const [trade] = await this.db
+      .select({ id: trades.id })
+      .from(trades)
+      .where(and(eq(trades.id, tradeId), eq(trades.userId, userId)))
+      .limit(1);
+
+    if (!trade) {
+      throw new NotFoundException({
+        error: 'NOT_FOUND',
+        message: 'Trade not found',
+      });
+    }
+  }
+
+  private async ensureJournalBelongsToUser(
+    journalId: string,
+    userId: string,
+  ): Promise<void> {
+    const [journal] = await this.db
+      .select({ id: dailyJournals.id })
+      .from(dailyJournals)
+      .where(
+        and(eq(dailyJournals.id, journalId), eq(dailyJournals.userId, userId)),
+      )
+      .limit(1);
+
+    if (!journal) {
+      throw new NotFoundException({
+        error: 'NOT_FOUND',
+        message: 'Journal not found',
+      });
+    }
   }
 }

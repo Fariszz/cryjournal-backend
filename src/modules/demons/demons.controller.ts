@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  UnauthorizedException,
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '../../common/validation/zod-validation.pipe';
@@ -31,12 +32,25 @@ import {
   EvidenceCreateDto,
   evidenceCreateSchema,
 } from './demons.schemas';
+import {
+  CurrentUser,
+  type RequestUser,
+} from '@common/auth/current-user.decorator';
 
 @ApiTags('Demons')
 @ApiBearerAuth()
 @Controller('demons')
 export class DemonsController {
   constructor(private readonly demonsService: DemonsService) {}
+  private getCurrentUserId(user: RequestUser | undefined): string {
+    if (!user) {
+      throw new UnauthorizedException({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication is required',
+      });
+    }
+    return user.id;
+  }
 
   @Get()
   @ApiOperation({
@@ -48,8 +62,8 @@ export class DemonsController {
     schema: { example: { data: [] } },
   })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  async list() {
-    const data = await this.demonsService.list();
+  async list(@CurrentUser() user: RequestUser | undefined) {
+    const data = await this.demonsService.list(this.getCurrentUserId(user));
     return { data };
   }
 
@@ -70,8 +84,14 @@ export class DemonsController {
   @ApiBadRequestResponse({ description: 'Request payload is invalid.' })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @UsePipes(new ZodValidationPipe(demonCreateSchema))
-  async create(@Body() body: DemonCreateDto) {
-    const data = await this.demonsService.create(body);
+  async create(
+    @Body() body: DemonCreateDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.demonsService.create(
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -93,8 +113,14 @@ export class DemonsController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Demon was not found.' })
   @UsePipes(new ZodValidationPipe(demonIdParamSchema))
-  async get(@Param() params: DemonIdParamDto) {
-    const data = await this.demonsService.getById(params.id);
+  async get(
+    @Param() params: DemonIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.demonsService.getById(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -125,8 +151,16 @@ export class DemonsController {
     new ZodValidationPipe(demonIdParamSchema),
     new ZodValidationPipe(demonUpdateSchema),
   )
-  async update(@Param() params: DemonIdParamDto, @Body() body: DemonUpdateDto) {
-    const data = await this.demonsService.update(params.id, body);
+  async update(
+    @Param() params: DemonIdParamDto,
+    @Body() body: DemonUpdateDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.demonsService.update(
+      params.id,
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -160,8 +194,13 @@ export class DemonsController {
   async createEvidence(
     @Param() params: DemonIdParamDto,
     @Body() body: EvidenceCreateDto,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    const data = await this.demonsService.createEvidence(params.id, body);
+    const data = await this.demonsService.createEvidence(
+      params.id,
+      body,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -183,8 +222,14 @@ export class DemonsController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Demon was not found.' })
   @UsePipes(new ZodValidationPipe(demonIdParamSchema))
-  async listEvidence(@Param() params: DemonIdParamDto) {
-    const data = await this.demonsService.listEvidence(params.id);
+  async listEvidence(
+    @Param() params: DemonIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.demonsService.listEvidence(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 
@@ -206,8 +251,14 @@ export class DemonsController {
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
   @ApiNotFoundResponse({ description: 'Demon was not found.' })
   @UsePipes(new ZodValidationPipe(demonIdParamSchema))
-  async performance(@Param() params: DemonIdParamDto) {
-    const data = await this.demonsService.performance(params.id);
+  async performance(
+    @Param() params: DemonIdParamDto,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const data = await this.demonsService.performance(
+      params.id,
+      this.getCurrentUserId(user),
+    );
     return { data };
   }
 }
