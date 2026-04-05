@@ -8,29 +8,48 @@ import {
 } from '@common/constants/pagination.constants';
 
 export const dateRangeSchema = z.object({
-  date_from: z.iso.datetime(),
-  date_to: z.iso.datetime(),
+  date_from: z.iso
+    .datetime()
+    .describe('Start date-time in ISO 8601 format for analytics range.'),
+  date_to: z.iso
+    .datetime()
+    .describe('End date-time in ISO 8601 format for analytics range.'),
 });
 
 export const homeAnalyticsQuerySchema = dateRangeSchema.extend({
-  account_id: z.uuid().optional(),
+  account_id: z
+    .uuid()
+    .optional()
+    .describe('Optional account identifier to scope home analytics.'),
 });
 
 export const accountAnalyticsQuerySchema = dateRangeSchema.extend({
-  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  page: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(DEFAULT_PAGE)
+    .describe('Page number for paginated analytics response (minimum 1).'),
   page_size: z.coerce
     .number()
     .int()
     .positive()
     .max(MAX_PAGE_SIZE)
-    .default(DEFAULT_PAGE_SIZE),
-  month: z.string().optional(),
+    .default(DEFAULT_PAGE_SIZE)
+    .describe(`Number of items per page (maximum ${MAX_PAGE_SIZE}).`),
+  month: z
+    .string()
+    .optional()
+    .describe('Target month in YYYY-MM format for calendar analytics.'),
   limit: z.coerce
     .number()
     .int()
     .positive()
     .max(MAX_PAGE_SIZE)
-    .default(DEFAULT_LIMIT),
+    .default(DEFAULT_LIMIT)
+    .describe(
+      `Maximum number of records to return (maximum ${MAX_PAGE_SIZE}).`,
+    ),
 });
 
 export const accountOverviewQuerySchema = accountAnalyticsQuerySchema.pick({
@@ -54,7 +73,7 @@ export const accountRecentTradesQuerySchema = accountAnalyticsQuerySchema.pick({
 });
 
 export const accountIdParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().uuid().describe('Account identifier in UUID format.'),
 });
 
 export class HomeAnalyticsQueryDto extends createZodDto(
