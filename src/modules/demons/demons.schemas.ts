@@ -2,12 +2,27 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const demonCreateSchema = z.object({
-  name: z.string().min(1),
-  trigger: z.string().optional(),
-  pattern: z.string().optional(),
-  consequence: z.string().optional(),
-  counterPlan: z.string().optional(),
-  preventionChecklist: z.array(z.string()).default([]),
+  name: z.string().min(1).describe('Demon name (minimum 1 character).'),
+  trigger: z
+    .string()
+    .optional()
+    .describe('Optional trigger condition description.'),
+  pattern: z
+    .string()
+    .optional()
+    .describe('Optional recurring behavior pattern.'),
+  consequence: z
+    .string()
+    .optional()
+    .describe('Optional negative consequence description.'),
+  counterPlan: z
+    .string()
+    .optional()
+    .describe('Optional counter-plan to handle the demon.'),
+  preventionChecklist: z
+    .array(z.string().describe('Checklist item text.'))
+    .default([])
+    .describe('Preventive checklist items to avoid this demon.'),
 });
 
 export const demonUpdateSchema = demonCreateSchema
@@ -17,14 +32,23 @@ export const demonUpdateSchema = demonCreateSchema
   });
 
 export const evidenceCreateSchema = z.object({
-  tradeId: z.uuid().optional(),
-  dailyJournalId: z.uuid().optional(),
-  note: z.string().optional(),
-  screenshotPath: z.string().optional(),
+  tradeId: z
+    .uuid()
+    .optional()
+    .describe('Optional related trade identifier (UUID).'),
+  dailyJournalId: z
+    .uuid()
+    .optional()
+    .describe('Optional related daily journal identifier (UUID).'),
+  note: z.string().optional().describe('Optional evidence note text.'),
+  screenshotPath: z
+    .string()
+    .optional()
+    .describe('Optional screenshot storage path for the evidence item.'),
 });
 
 export const demonIdParamSchema = z.object({
-  id: z.uuid(),
+  id: z.uuid().describe('Demon identifier in UUID format.'),
 });
 
 export class DemonCreateDto extends createZodDto(demonCreateSchema) {}
