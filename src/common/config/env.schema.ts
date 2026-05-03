@@ -11,6 +11,11 @@ export const envSchema = z.object({
     .positive()
     .default(3000)
     .describe('HTTP server port number (positive integer).'),
+  CORS_ALLOWED_ORIGINS: z
+    .string()
+    .min(1)
+    .default('http://localhost:5173,http://localhost:4173')
+    .describe('Comma-separated list of frontend origins allowed by CORS.'),
   DATABASE_URL: z
     .string()
     .min(1)

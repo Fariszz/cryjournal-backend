@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
+import { getCorsOptions } from './common/http/cors-options';
 import { AppLoggerService } from './common/logging/app-logger.service';
 import { IncomingMessage, ServerResponse } from 'http';
 
@@ -17,6 +18,7 @@ async function bootstrap(): Promise<NestExpressApplication> {
   app.useLogger(app.get(AppLoggerService));
   app.use(helmet());
   app.use(cookieParser());
+  app.enableCors(getCorsOptions());
 
   app.setGlobalPrefix('api/v1');
   app.useGlobalInterceptors(new ApiResponseInterceptor());

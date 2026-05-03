@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
+import { getCorsOptions } from './common/http/cors-options';
 import { AppLoggerService } from './common/logging/app-logger.service';
 import { env } from './common/config/env';
 
@@ -19,13 +20,7 @@ async function bootstrap(): Promise<void> {
   // Middleware Express
   app.use(helmet());
   app.use(cookieParser());
-  app.enableCors({
-    origin: ['*', 'http://localhost:5173', 'http://localhost:4173'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: '*',
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
+  app.enableCors(getCorsOptions());
 
   // Global config
   app.setGlobalPrefix('api/v1');
