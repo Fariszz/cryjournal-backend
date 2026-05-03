@@ -27,7 +27,6 @@ async function bootstrap(): Promise<void> {
     allowedHeaders: '*',
     preflightContinue: false,
     optionsSuccessStatus: 204,
-    credentials: true,
   });
 
   // Global config
