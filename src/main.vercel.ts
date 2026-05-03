@@ -13,16 +13,19 @@ import { IncomingMessage, ServerResponse } from 'http';
 let cachedApp: NestExpressApplication;
 
 async function bootstrap(): Promise<NestExpressApplication> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: getCorsOptions(),
+  });
 
   app.useLogger(app.get(AppLoggerService));
   app.use(helmet());
   app.use(cookieParser());
-  app.enableCors(getCorsOptions());
 
   app.setGlobalPrefix('api/v1');
   app.useGlobalInterceptors(new ApiResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  await app.init();
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('CryJournal API')
@@ -38,8 +41,6 @@ async function bootstrap(): Promise<NestExpressApplication> {
   SwaggerModule.setup('docs', app, swaggerDocument, {
     jsonDocumentUrl: 'docs/openapi.json',
   });
-
-  await app.init(); // ← init(), bukan listen()
 
   return app;
 }
