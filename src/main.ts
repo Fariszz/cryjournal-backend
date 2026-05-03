@@ -11,6 +11,8 @@ import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
 import { AppLoggerService } from './common/logging/app-logger.service';
 import { env } from './common/config/env';
 
+const allowedOrigins = ['http://localhost:5173'];
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule); // ❗ tanpa FastifyAdapter
 
@@ -19,6 +21,7 @@ async function bootstrap(): Promise<void> {
   // Middleware Express
   app.use(helmet());
   app.use(cookieParser());
+  app.enableCors();
 
   // Global config
   app.setGlobalPrefix('api/v1');
