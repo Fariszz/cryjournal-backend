@@ -13,14 +13,15 @@ import { AppLoggerService } from './common/logging/app-logger.service';
 import { env } from './common/config/env';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule); // ❗ tanpa FastifyAdapter
+  const app = await NestFactory.create(AppModule, {
+    cors: getCorsOptions(),
+  }); // ❗ tanpa FastifyAdapter
 
   app.useLogger(app.get(AppLoggerService));
 
   // Middleware Express
   app.use(helmet());
   app.use(cookieParser());
-  app.enableCors(getCorsOptions());
 
   // Global config
   app.setGlobalPrefix('api/v1');
