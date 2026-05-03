@@ -8,6 +8,7 @@ const CORS_ALLOWED_METHODS: string[] = [
   'DELETE',
   'PATCH',
   'OPTIONS',
+  'HEAD',
 ];
 
 const CORS_ALLOWED_HEADERS: string[] = [
