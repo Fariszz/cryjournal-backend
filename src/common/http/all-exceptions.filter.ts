@@ -60,8 +60,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return;
     }
 
-    const message =
-      exception instanceof Error ? exception.message : 'Internal Server Error';
+    // const message =
+    //   exception instanceof Error ? exception.message : 'Internal Server Error';
+    const message = 'Internal Server Error';
 
     this.logger.error(
       `Unhandled exception on ${requestMeta.method} ${requestMeta.path}`,

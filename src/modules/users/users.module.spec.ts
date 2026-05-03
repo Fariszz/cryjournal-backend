@@ -28,9 +28,8 @@ describe('UsersModule', () => {
       .compile();
 
     const usersController = module.get<UsersController>(UsersController);
-    const adminUsersController = module.get<AdminUsersController>(
-      AdminUsersController,
-    );
+    const adminUsersController =
+      module.get<AdminUsersController>(AdminUsersController);
     const usersService = module.get<UsersService>(UsersService);
     const appRolesService = module.get<AppRolesService>(AppRolesService);
 
