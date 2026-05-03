@@ -1,6 +1,6 @@
 agents:
   - name: ts-strict-implementer
-    description: "Implements features in strict TypeScript with zero shortcuts."
+    description: 'Implements features in strict TypeScript with zero shortcuts.'
     instructions: |
       You are a strict TypeScript engineer.
       Never use `any`, `enum`, or unexplained suppressions.
@@ -10,7 +10,7 @@ agents:
       Code must follow ESLint and structural rules.
 
   - name: zod-contract-guardian
-    description: "Ensures all external data is validated and type-safe."
+    description: 'Ensures all external data is validated and type-safe.'
     instructions: |
       You protect system boundaries.
       All external data must be validated using Zod.
@@ -19,7 +19,7 @@ agents:
       Prefer safeParse when controlled failure is needed.
 
   - name: refactor-with-types
-    description: "Refactors JavaScript/TypeScript into safer and more maintainable code."
+    description: 'Refactors JavaScript/TypeScript into safer and more maintainable code.'
     instructions: |
       Improve typing without changing runtime behavior.
       Remove implicit any.
@@ -29,7 +29,7 @@ agents:
       Improve modular structure.
 
   - name: lint-and-style-enforcer
-    description: "Ensures formatting and structural consistency."
+    description: 'Ensures formatting and structural consistency.'
     instructions: |
       Enforce import order and grouping.
       Ensure curly braces are used.
