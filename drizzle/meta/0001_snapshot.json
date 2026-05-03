@@ -1,6 +1,6 @@
 {
-  "id": "0e24455f-f0b6-4ee5-bd84-df2829b180da",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "543dcb9c-3c86-450c-9141-2516147150ff",
+  "prevId": "0e24455f-f0b6-4ee5-bd84-df2829b180da",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -54,8 +54,12 @@
           "name": "account_groups_user_id_users_id_fk",
           "tableFrom": "account_groups",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -184,8 +188,12 @@
           "name": "accounts_group_id_account_groups_id_fk",
           "tableFrom": "accounts",
           "tableTo": "account_groups",
-          "columnsFrom": ["group_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -193,8 +201,12 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -267,8 +279,12 @@
           "name": "demon_evidence_logs_demon_id_demons_id_fk",
           "tableFrom": "demon_evidence_logs",
           "tableTo": "demons",
-          "columnsFrom": ["demon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "demon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -276,8 +292,12 @@
           "name": "demon_evidence_logs_trade_id_trades_id_fk",
           "tableFrom": "demon_evidence_logs",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -285,8 +305,12 @@
           "name": "demon_evidence_logs_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "demon_evidence_logs",
           "tableTo": "daily_journals",
-          "columnsFrom": ["daily_journal_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "daily_journal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -392,8 +416,12 @@
           "name": "demon_performance_logs_demon_id_demons_id_fk",
           "tableFrom": "demon_performance_logs",
           "tableTo": "demons",
-          "columnsFrom": ["demon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "demon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -414,6 +442,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -473,8 +507,38 @@
           "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "demons_user_id_idx": {
+          "name": "demons_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "demons_user_id_users_id_fk": {
+          "name": "demons_user_id_users_id_fk",
+          "tableFrom": "demons",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -491,6 +555,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "symbol": {
           "name": "symbol",
@@ -520,9 +590,15 @@
         }
       },
       "indexes": {
-        "instruments_symbol_unique": {
-          "name": "instruments_symbol_unique",
+        "instruments_user_symbol_unique": {
+          "name": "instruments_user_symbol_unique",
           "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
             {
               "expression": "symbol",
               "isExpression": false,
@@ -531,6 +607,21 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "instruments_user_id_idx": {
+          "name": "instruments_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -566,7 +657,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "instruments_user_id_users_id_fk": {
+          "name": "instruments_user_id_users_id_fk",
+          "tableFrom": "instruments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -623,8 +728,12 @@
           "name": "daily_journal_attachments_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "daily_journal_attachments",
           "tableTo": "daily_journals",
-          "columnsFrom": ["daily_journal_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "daily_journal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -680,8 +789,12 @@
           "name": "daily_journal_demons_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "daily_journal_demons",
           "tableTo": "daily_journals",
-          "columnsFrom": ["daily_journal_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "daily_journal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -689,8 +802,12 @@
           "name": "daily_journal_demons_demon_id_demons_id_fk",
           "tableFrom": "daily_journal_demons",
           "tableTo": "demons",
-          "columnsFrom": ["demon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "demon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -746,8 +863,12 @@
           "name": "daily_journal_trades_daily_journal_id_daily_journals_id_fk",
           "tableFrom": "daily_journal_trades",
           "tableTo": "daily_journals",
-          "columnsFrom": ["daily_journal_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "daily_journal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -755,8 +876,12 @@
           "name": "daily_journal_trades_trade_id_trades_id_fk",
           "tableFrom": "daily_journal_trades",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -777,6 +902,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "date": {
           "name": "date",
@@ -860,9 +991,30 @@
         }
       },
       "indexes": {
+        "daily_journals_user_id_idx": {
+          "name": "daily_journals_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "daily_journals_date_account_unique": {
           "name": "daily_journals_date_account_unique",
           "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
             {
               "expression": "date",
               "isExpression": false,
@@ -883,12 +1035,29 @@
         }
       },
       "foreignKeys": {
+        "daily_journals_user_id_users_id_fk": {
+          "name": "daily_journals_user_id_users_id_fk",
+          "tableFrom": "daily_journals",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "daily_journals_account_id_accounts_id_fk": {
           "name": "daily_journals_account_id_accounts_id_fk",
           "tableFrom": "daily_journals",
           "tableTo": "accounts",
-          "columnsFrom": ["account_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -985,8 +1154,12 @@
           "name": "user_roles_user_id_users_id_fk",
           "tableFrom": "user_roles",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -994,8 +1167,12 @@
           "name": "user_roles_role_id_roles_id_fk",
           "tableFrom": "user_roles",
           "tableTo": "roles",
-          "columnsFrom": ["role_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1003,7 +1180,10 @@
       "compositePrimaryKeys": {
         "user_roles_user_id_role_id_pk": {
           "name": "user_roles_user_id_role_id_pk",
-          "columns": ["user_id", "role_id"]
+          "columns": [
+            "user_id",
+            "role_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1086,6 +1266,12 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "name": {
           "name": "name",
           "type": "varchar(150)",
@@ -1126,8 +1312,38 @@
           "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "strategies_user_id_idx": {
+          "name": "strategies_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "strategies_user_id_users_id_fk": {
+          "name": "strategies_user_id_users_id_fk",
+          "tableFrom": "strategies",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1234,8 +1450,12 @@
           "name": "strategy_confluences_strategy_id_strategies_id_fk",
           "tableFrom": "strategy_confluences",
           "tableTo": "strategies",
-          "columnsFrom": ["strategy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1318,8 +1538,12 @@
           "name": "strategy_steps_strategy_id_strategies_id_fk",
           "tableFrom": "strategy_steps",
           "tableTo": "strategies",
-          "columnsFrom": ["strategy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1444,8 +1668,12 @@
           "name": "trade_attachments_trade_id_trades_id_fk",
           "tableFrom": "trade_attachments",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1543,8 +1771,12 @@
           "name": "trade_confluence_checks_trade_id_trades_id_fk",
           "tableFrom": "trade_confluence_checks",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1552,8 +1784,12 @@
           "name": "trade_confluence_checks_confluence_id_strategy_confluences_id_fk",
           "tableFrom": "trade_confluence_checks",
           "tableTo": "strategy_confluences",
-          "columnsFrom": ["confluence_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "confluence_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1631,8 +1867,12 @@
           "name": "trade_context_events_trade_id_trades_id_fk",
           "tableFrom": "trade_context_events",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1718,8 +1958,12 @@
           "name": "trade_demon_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_demon_pivot",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1727,8 +1971,12 @@
           "name": "trade_demon_pivot_demon_id_demons_id_fk",
           "tableFrom": "trade_demon_pivot",
           "tableTo": "demons",
-          "columnsFrom": ["demon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "demon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1784,8 +2032,12 @@
           "name": "trade_market_condition_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_market_condition_pivot",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1793,8 +2045,12 @@
           "name": "trade_market_condition_pivot_market_condition_id_market_conditions_id_fk",
           "tableFrom": "trade_market_condition_pivot",
           "tableTo": "market_conditions",
-          "columnsFrom": ["market_condition_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "market_condition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1850,8 +2106,12 @@
           "name": "trade_market_condition_tag_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_market_condition_tag_pivot",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1859,8 +2119,12 @@
           "name": "trade_market_condition_tag_pivot_market_condition_tag_id_market_condition_tags_id_fk",
           "tableFrom": "trade_market_condition_tag_pivot",
           "tableTo": "market_condition_tags",
-          "columnsFrom": ["market_condition_tag_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "market_condition_tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1946,8 +2210,12 @@
           "name": "trade_tag_pivot_trade_id_trades_id_fk",
           "tableFrom": "trade_tag_pivot",
           "tableTo": "trades",
-          "columnsFrom": ["trade_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1955,8 +2223,12 @@
           "name": "trade_tag_pivot_tag_id_trade_tags_id_fk",
           "tableFrom": "trade_tag_pivot",
           "tableTo": "trade_tags",
-          "columnsFrom": ["tag_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2017,6 +2289,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "account_id": {
           "name": "account_id",
@@ -2239,6 +2517,27 @@
         }
       },
       "indexes": {
+        "trades_user_entry_datetime_idx": {
+          "name": "trades_user_entry_datetime_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entry_datetime",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "trades_account_entry_datetime_idx": {
           "name": "trades_account_entry_datetime_idx",
           "columns": [
@@ -2292,12 +2591,29 @@
         }
       },
       "foreignKeys": {
+        "trades_user_id_users_id_fk": {
+          "name": "trades_user_id_users_id_fk",
+          "tableFrom": "trades",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "trades_account_id_accounts_id_fk": {
           "name": "trades_account_id_accounts_id_fk",
           "tableFrom": "trades",
           "tableTo": "accounts",
-          "columnsFrom": ["account_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2305,8 +2621,12 @@
           "name": "trades_instrument_id_instruments_id_fk",
           "tableFrom": "trades",
           "tableTo": "instruments",
-          "columnsFrom": ["instrument_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "instrument_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2314,8 +2634,12 @@
           "name": "trades_strategy_id_strategies_id_fk",
           "tableFrom": "trades",
           "tableTo": "strategies",
-          "columnsFrom": ["strategy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2446,42 +2770,71 @@
     "public.account_type": {
       "name": "account_type",
       "schema": "public",
-      "values": ["crypto", "forex", "stocks"]
+      "values": [
+        "crypto",
+        "forex",
+        "stocks"
+      ]
     },
     "public.direction": {
       "name": "direction",
       "schema": "public",
-      "values": ["long", "short"]
+      "values": [
+        "long",
+        "short"
+      ]
     },
     "public.holding_bucket": {
       "name": "holding_bucket",
       "schema": "public",
-      "values": ["scalp", "intraday", "swing", "position"]
+      "values": [
+        "scalp",
+        "intraday",
+        "swing",
+        "position"
+      ]
     },
     "public.margin_mode": {
       "name": "margin_mode",
       "schema": "public",
-      "values": ["cross", "isolated"]
+      "values": [
+        "cross",
+        "isolated"
+      ]
     },
     "public.position_size_unit": {
       "name": "position_size_unit",
       "schema": "public",
-      "values": ["lot", "usd", "contract"]
+      "values": [
+        "lot",
+        "usd",
+        "contract"
+      ]
     },
     "public.position_type": {
       "name": "position_type",
       "schema": "public",
-      "values": ["spot", "futures"]
+      "values": [
+        "spot",
+        "futures"
+      ]
     },
     "public.trade_type": {
       "name": "trade_type",
       "schema": "public",
-      "values": ["executed", "missed"]
+      "values": [
+        "executed",
+        "missed"
+      ]
     },
     "public.win_loss_flag": {
       "name": "win_loss_flag",
       "schema": "public",
-      "values": ["win", "loss", "breakeven"]
+      "values": [
+        "win",
+        "loss",
+        "breakeven"
+      ]
     }
   },
   "schemas": {},
