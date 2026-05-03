@@ -1,7 +1,8 @@
 # Codex Rules — TypeScript (Strict Engineering Standard)
 
 ## Prime Directive
-Write clean, maintainable, strictly typed TypeScript. 
+
+Write clean, maintainable, strictly typed TypeScript.
 No shortcuts. No weakening the type system.
 
 ---
@@ -27,16 +28,19 @@ Never weaken TypeScript strictness to “make it work.”
 ## 2. Type Safety Rules
 
 ### 🚫 Forbidden
+
 - `any`
 - Unexplained `// @ts-ignore`
 - Unexplained `// @ts-expect-error`
 - `enum`
 
 If suppression is absolutely necessary, it must include:
+
 - Why it is safe
 - When it can be removed
 
 ### ✅ Required
+
 - Explicit parameter types
 - Explicit return types for exported functions
 - Clear object typing
@@ -74,6 +78,7 @@ All external data must be validated:
 - User input
 
 ### Rules:
+
 - Use Zod (`z`)
 - Use `parse()` for strict validation
 - Use `safeParse()` when controlled failure is required
@@ -87,6 +92,7 @@ All external data must be validated:
 ## 5. Code Style & ESLint Behavior Rules
 
 ### General
+
 - Prefer `const` over `let`
 - Never return `await`
 - Always use curly braces
@@ -98,6 +104,7 @@ All external data must be validated:
 - Prefix unused variables with `_`
 
 ### Imports
+
 Order imports as:
 
 1. Built-in
@@ -109,6 +116,7 @@ Order imports as:
 7. Type imports
 
 Rules:
+
 - Group imports with blank lines
 - Sort alphabetically inside groups
 - Sort named imports
@@ -116,6 +124,7 @@ Rules:
 - No circular dependencies
 
 ## Code Organization
+
 - Document complex types with JSDoc comments
 
 ---
