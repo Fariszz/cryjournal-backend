@@ -11,8 +11,6 @@ import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
 import { AppLoggerService } from './common/logging/app-logger.service';
 import { env } from './common/config/env';
 
-const allowedOrigins = ['http://localhost:5173', '*'];
-
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule); // ❗ tanpa FastifyAdapter
 
@@ -22,8 +20,8 @@ async function bootstrap(): Promise<void> {
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({
-    origin: '*',
-    methods: '*',
+    origin: ['*', 'http://localhost:5173', 'http://localhost:4173'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: '*',
     preflightContinue: false,
     optionsSuccessStatus: 204,
