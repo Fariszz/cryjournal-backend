@@ -17,6 +17,11 @@ async function bootstrap(): Promise<NestExpressApplication> {
     cors: getCorsOptions(),
   });
 
+  // DEBUG — hapus setelah fix
+  const corsOpts = getCorsOptions();
+  console.log('[CORS] origin:', corsOpts.origin);
+  console.log('[CORS] methods:', corsOpts.methods);
+  console.log('[CORS] allowedHeaders:', corsOpts.allowedHeaders);
   app.useLogger(app.get(AppLoggerService));
   app.use(helmet());
   app.use(cookieParser());
