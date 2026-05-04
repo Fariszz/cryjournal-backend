@@ -18,6 +18,8 @@ const CORS_ALLOWED_HEADERS = [
   'X-Api-Version',
   'X-CSRF-Token',
   'X-Requested-With',
+  'Content-MD5',
+  'Content-Length',
 ];
 
 function getAllowedOrigins(): string | string[] {
