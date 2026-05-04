@@ -43,6 +43,6 @@ export function getCorsOptions(): CorsOptions {
     allowedHeaders: CORS_ALLOWED_HEADERS,
     preflightContinue: false,
     optionsSuccessStatus: 204,
-    credentials: false,
+    credentials: true,
   };
 }
