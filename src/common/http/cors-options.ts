@@ -1,7 +1,7 @@
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { env } from '@common/config/env';
 
-const CORS_ALLOWED_METHODS: string[] = [
+const CORS_ALLOWED_METHODS = [
   'GET',
   'POST',
   'PUT',
@@ -11,30 +11,29 @@ const CORS_ALLOWED_METHODS: string[] = [
   'HEAD',
 ];
 
-const CORS_ALLOWED_HEADERS: string[] = [
+const CORS_ALLOWED_HEADERS = [
   'Accept',
-  'Accept-Version',
   'Authorization',
-  'Content-Length',
-  'Content-MD5',
   'Content-Type',
-  'Date',
-  'Origin',
   'X-Api-Version',
   'X-CSRF-Token',
   'X-Requested-With',
 ];
 
 function getAllowedOrigins(): string | string[] {
-  const origins = env.CORS_ALLOWED_ORIGINS.split(',')
-    .map((origin: string): string => origin.trim())
-    .filter((origin: string): boolean => origin.length > 0);
+  const raw = env.CORS_ALLOWED_ORIGINS || '';
+
+  const origins = raw
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   if (origins.includes('*')) {
     return '*';
   }
+
   return origins;
 }
-
 export function getCorsOptions(): CorsOptions {
   return {
     origin: getAllowedOrigins(),
@@ -42,5 +41,6 @@ export function getCorsOptions(): CorsOptions {
     allowedHeaders: CORS_ALLOWED_HEADERS,
     preflightContinue: false,
     optionsSuccessStatus: 204,
+    credentials: false,
   };
 }

@@ -15,7 +15,7 @@ import { env } from './common/config/env';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     cors: getCorsOptions(),
-  }); // ❗ tanpa FastifyAdapter
+  });
 
   app.useLogger(app.get(AppLoggerService));
 
