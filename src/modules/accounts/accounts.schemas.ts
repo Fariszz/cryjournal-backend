@@ -56,6 +56,28 @@ export const accountUpdateSchema = accountCreateSchema
     message: 'At least one field is required',
   });
 
+export const accountBulkCreateSchema = z
+  .array(accountCreateSchema)
+  .min(1)
+  .describe('List of accounts to create (minimum 1 item).');
+
+export const accountBulkUpdateItemSchema = accountCreateSchema
+  .partial()
+  .extend({
+    id: z.string().uuid().describe('Account identifier in UUID format.'),
+  })
+  .refine(
+    (value) => Object.keys(value).filter((key) => key !== 'id').length > 0,
+    {
+      message: 'At least one field is required',
+    },
+  );
+
+export const accountBulkUpdateSchema = z
+  .array(accountBulkUpdateItemSchema)
+  .min(1)
+  .describe('List of accounts to update (minimum 1 item).');
+
 export const accountListSchema = z.object({
   group_id: z
     .string()
@@ -96,6 +118,10 @@ export class AccountGroupUpdateDto extends createZodDto(
 export class AccountCreateDto extends createZodDto(accountCreateSchema) {}
 
 export class AccountUpdateDto extends createZodDto(accountUpdateSchema) {}
+
+export type AccountBulkCreateDto = z.infer<typeof accountBulkCreateSchema>;
+
+export type AccountBulkUpdateDto = z.infer<typeof accountBulkUpdateSchema>;
 
 export class AccountListQueryDto extends createZodDto(accountListSchema) {}
 

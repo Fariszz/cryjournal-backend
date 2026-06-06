@@ -1,4 +1,8 @@
 import type { InferSelectModel } from 'drizzle-orm';
 import { accountGroups } from '@db/schema';
 
-export type AccountGroupResponse = InferSelectModel<typeof accountGroups>;
+export interface AccountGroupResponse extends InferSelectModel<
+  typeof accountGroups
+> {
+  readonly accountCount: number;
+}

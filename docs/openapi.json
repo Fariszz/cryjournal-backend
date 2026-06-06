@@ -552,7 +552,8 @@
                       {
                         "id": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
                         "name": "Futures Accounts",
-                        "description": "Group for derivatives trading accounts"
+                        "description": "Group for derivatives trading accounts",
+                        "accountCount": 3
                       }
                     ]
                   }
@@ -701,6 +702,61 @@
       }
     },
     "/api/v1/account-groups/{id}": {
+      "get": {
+        "description": "Retrieves an account group by identifier.",
+        "operationId": "AccountsController_getGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account group identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account group retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+                      "name": "Futures Accounts",
+                      "description": "Group for derivatives trading accounts",
+                      "accountCount": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account group was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account group detail",
+        "tags": [
+          "Accounts"
+        ]
+      },
       "put": {
         "description": "Updates account group fields by identifier.",
         "operationId": "AccountsController_updateGroup",
@@ -1012,7 +1068,226 @@
         ]
       }
     },
+    "/api/v1/accounts/bulk": {
+      "post": {
+        "description": "Creates multiple trading accounts for the authenticated user in a single atomic request.",
+        "operationId": "AccountsController_createAccounts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create multiple trading accounts.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AccountCreateDto"
+                },
+                "example": [
+                  {
+                    "name": "Binance Futures",
+                    "broker": "binance",
+                    "accountType": "crypto",
+                    "baseCurrency": "USD",
+                    "timezone": "Asia/Jakarta"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Accounts created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                        "name": "Binance Futures",
+                        "broker": "Binance",
+                        "accountType": "CRYPTO"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "One or more account groups were not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk create accounts",
+        "tags": [
+          "Accounts"
+        ]
+      },
+      "put": {
+        "description": "Updates multiple trading accounts with per-account payloads in a single atomic request.",
+        "operationId": "AccountsController_updateAccounts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update multiple trading accounts.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Bybit Futures"
+                    },
+                    "broker": {
+                      "type": "string",
+                      "example": "bybit"
+                    },
+                    "accountType": {
+                      "type": "string",
+                      "example": "crypto"
+                    },
+                    "baseCurrency": {
+                      "type": "string",
+                      "example": "USD"
+                    },
+                    "timezone": {
+                      "type": "string",
+                      "example": "Asia/Jakarta"
+                    }
+                  }
+                },
+                "example": [
+                  {
+                    "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                    "name": "Bybit Futures"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accounts updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                        "name": "Bybit Futures"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "One or more accounts or account groups were not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk update accounts",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
     "/api/v1/accounts/{id}": {
+      "get": {
+        "description": "Retrieves a trading account by identifier.",
+        "operationId": "AccountsController_getAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                      "groupId": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+                      "name": "Binance Futures",
+                      "broker": "Binance",
+                      "accountType": "CRYPTO",
+                      "baseCurrency": "USD",
+                      "timezone": "Asia/Jakarta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account detail",
+        "tags": [
+          "Accounts"
+        ]
+      },
       "put": {
         "description": "Updates account details by identifier.",
         "operationId": "AccountsController_updateAccount",

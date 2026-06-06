@@ -2,11 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import type { DB } from '@db/client';
 import { AccountsService } from './accounts.service';
 import {
+  accountBulkCreateSchema,
+  accountBulkUpdateSchema,
+} from './accounts.schemas';
+import {
   ACCOUNT_TYPE_OPTIONS,
   BROKER_OPTIONS,
   CURRENCY_OPTIONS,
   TIMEZONE_OPTIONS,
 } from './seeds/account-select-options.seed';
+import { AccountTypeEnum } from '@common/enums/account-type.enum';
 
 describe('AccountsService', () => {
   let service: AccountsService;
@@ -69,5 +74,34 @@ describe('AccountsService', () => {
         },
       ]),
     );
+  });
+
+  it('validates bulk create schema with at least one account', () => {
+    const invalidResult = accountBulkCreateSchema.safeParse([]);
+    const validResult = accountBulkCreateSchema.safeParse([
+      {
+        name: 'Binance Futures',
+        broker: 'binance',
+        accountType: AccountTypeEnum.CRYPTO,
+        baseCurrency: 'USD',
+        timezone: 'Asia/Jakarta',
+      },
+    ]);
+    expect(invalidResult.success).toBe(false);
+    expect(validResult.success).toBe(true);
+  });
+
+  it('validates bulk update schema requires id and at least one field', () => {
+    const invalidResult = accountBulkUpdateSchema.safeParse([
+      { id: '5a8f198f-31ef-4584-b806-e4f57ff52cb6' },
+    ]);
+    const validResult = accountBulkUpdateSchema.safeParse([
+      {
+        id: '5a8f198f-31ef-4584-b806-e4f57ff52cb6',
+        name: 'Bybit Futures',
+      },
+    ]);
+    expect(invalidResult.success).toBe(false);
+    expect(validResult.success).toBe(true);
   });
 });
