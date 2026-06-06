@@ -2,7 +2,7 @@
 
 Generated at: 2026-03-08T10:05:11.481Z
 Global prefix: `/api/v1`
-Total endpoints: **62**
+Total endpoints: **66**
 
 Auth rule: routes are treated as protected by default because `JwtAuthGuard` is registered globally; `@Public()` marks public routes.
 
@@ -160,6 +160,126 @@ Service source: `accountsService.listAccounts()`
     "deletedAt": ["null", "Date"]
   }
 ]
+```
+
+## GET /api/v1/accounts/account-types
+
+Controller: `AccountsController`
+Handler: `listAccountTypeOptions`
+Auth: Required
+Roles: -
+Guards: -
+
+Request
+
+```json
+{}
+```
+
+Response
+
+Type: `SelectOptionListResponseDto`
+Service source: `accountsService.listAccountTypeOptions()`
+
+```json
+{
+  "data": [
+    {
+      "value": "crypto",
+      "label": "Crypto"
+    }
+  ]
+}
+```
+
+## GET /api/v1/accounts/currencies
+
+Controller: `AccountsController`
+Handler: `listCurrencyOptions`
+Auth: Required
+Roles: -
+Guards: -
+
+Request
+
+```json
+{}
+```
+
+Response
+
+Type: `SelectOptionListResponseDto`
+Service source: `accountsService.listCurrencyOptions()`
+
+```json
+{
+  "data": [
+    {
+      "value": "USD",
+      "label": "US Dollar (USD)"
+    }
+  ]
+}
+```
+
+## GET /api/v1/accounts/brokers
+
+Controller: `AccountsController`
+Handler: `listBrokerOptions`
+Auth: Required
+Roles: -
+Guards: -
+
+Request
+
+```json
+{}
+```
+
+Response
+
+Type: `SelectOptionListResponseDto`
+Service source: `accountsService.listBrokerOptions()`
+
+```json
+{
+  "data": [
+    {
+      "value": "binance",
+      "label": "Binance"
+    }
+  ]
+}
+```
+
+## GET /api/v1/accounts/timezones
+
+Controller: `AccountsController`
+Handler: `listTimezoneOptions`
+Auth: Required
+Roles: -
+Guards: -
+
+Request
+
+```json
+{}
+```
+
+Response
+
+Type: `SelectOptionListResponseDto`
+Service source: `accountsService.listTimezoneOptions()`
+
+```json
+{
+  "data": [
+    {
+      "value": "Asia/Jakarta",
+      "label": "Asia/Jakarta (WIB, Indonesia)"
+    }
+  ]
+}
 ```
 
 ## POST /api/v1/accounts

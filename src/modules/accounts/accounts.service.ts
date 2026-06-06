@@ -11,6 +11,13 @@ import { InjectDb } from '@db/db.provider';
 import { accountGroups, accounts } from '@db/schema';
 import type { AccountGroupResponse } from './interfaces/account-group.response';
 import type { AccountResponse } from './interfaces/account.response';
+import type { SelectOptionResponse } from './interfaces/select-option.response';
+import {
+  ACCOUNT_TYPE_OPTIONS,
+  BROKER_OPTIONS,
+  CURRENCY_OPTIONS,
+  TIMEZONE_OPTIONS,
+} from './seeds/account-select-options.seed';
 
 @Injectable()
 export class AccountsService {
@@ -34,6 +41,22 @@ export class AccountsService {
         message: 'Account group not found',
       });
     }
+  }
+
+  listAccountTypeOptions(): SelectOptionResponse[] {
+    return ACCOUNT_TYPE_OPTIONS;
+  }
+
+  listCurrencyOptions(): SelectOptionResponse[] {
+    return CURRENCY_OPTIONS;
+  }
+
+  listBrokerOptions(): SelectOptionResponse[] {
+    return BROKER_OPTIONS;
+  }
+
+  listTimezoneOptions(): SelectOptionResponse[] {
+    return TIMEZONE_OPTIONS;
   }
 
   async listGroups(userId: string): Promise<AccountGroupResponse[]> {

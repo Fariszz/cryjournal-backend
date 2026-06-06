@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
@@ -43,7 +44,9 @@ async function bootstrap(): Promise<void> {
     )
     .build();
 
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  const swaggerDocument = cleanupOpenApiDoc(
+    SwaggerModule.createDocument(app, swaggerConfig),
+  );
   SwaggerModule.setup('docs', app, swaggerDocument, {
     jsonDocumentUrl: 'docs/openapi.json',
   });

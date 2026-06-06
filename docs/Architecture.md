@@ -14,6 +14,7 @@ Application bootstrap (`src/main.ts`) configures:
 - Fastify adapter with `helmet`, `cookie`, and `multipart`.
 - Global prefix: `/api/v1`.
 - Swagger UI: `/docs` with OpenAPI JSON at `/docs/openapi.json`.
+- Committed OpenAPI export: `docs/openapi.json` (regenerate with `pnpm run docs:openapi` for Apidog import).
 - Global `ValidationPipe` (class-transformer/class-validator behavior).
 - Global response and error normalization via:
   - `ApiResponseInterceptor`

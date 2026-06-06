@@ -1,7 +1,7 @@
 {
   "generatedAt": "2026-03-08T10:05:11.481Z",
   "globalPrefix": "/api/v1",
-  "endpointCount": 62,
+  "endpointCount": 66,
   "endpoints": [
     {
       "method": "GET",
@@ -184,6 +184,110 @@
         "source": {
           "serviceProperty": "accountsService",
           "serviceMethod": "createAccount"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/accounts/account-types",
+      "controller": "AccountsController",
+      "handler": "listAccountTypeOptions",
+      "authRequired": true,
+      "public": false,
+      "roles": [],
+      "guards": [],
+      "request": {},
+      "response": {
+        "typeName": "SelectOptionListResponseDto",
+        "shape": {
+          "data": [
+            {
+              "value": "string",
+              "label": "string"
+            }
+          ]
+        },
+        "source": {
+          "serviceProperty": "accountsService",
+          "serviceMethod": "listAccountTypeOptions"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/accounts/currencies",
+      "controller": "AccountsController",
+      "handler": "listCurrencyOptions",
+      "authRequired": true,
+      "public": false,
+      "roles": [],
+      "guards": [],
+      "request": {},
+      "response": {
+        "typeName": "SelectOptionListResponseDto",
+        "shape": {
+          "data": [
+            {
+              "value": "string",
+              "label": "string"
+            }
+          ]
+        },
+        "source": {
+          "serviceProperty": "accountsService",
+          "serviceMethod": "listCurrencyOptions"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/accounts/brokers",
+      "controller": "AccountsController",
+      "handler": "listBrokerOptions",
+      "authRequired": true,
+      "public": false,
+      "roles": [],
+      "guards": [],
+      "request": {},
+      "response": {
+        "typeName": "SelectOptionListResponseDto",
+        "shape": {
+          "data": [
+            {
+              "value": "string",
+              "label": "string"
+            }
+          ]
+        },
+        "source": {
+          "serviceProperty": "accountsService",
+          "serviceMethod": "listBrokerOptions"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/accounts/timezones",
+      "controller": "AccountsController",
+      "handler": "listTimezoneOptions",
+      "authRequired": true,
+      "public": false,
+      "roles": [],
+      "guards": [],
+      "request": {},
+      "response": {
+        "typeName": "SelectOptionListResponseDto",
+        "shape": {
+          "data": [
+            {
+              "value": "string",
+              "label": "string"
+            }
+          ]
+        },
+        "source": {
+          "serviceProperty": "accountsService",
+          "serviceMethod": "listTimezoneOptions"
         }
       }
     },

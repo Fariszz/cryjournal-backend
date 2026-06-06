@@ -18,6 +18,7 @@ import {
   AccountIdParamDto,
   accountIdParamSchema,
   AccountListQueryDto,
+  SelectOptionListResponseDto,
   AccountUpdateDto,
   accountCreateSchema,
   accountGroupCreateSchema,
@@ -45,6 +46,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
 @ApiTags('Accounts')
 @ApiBearerAuth()
@@ -238,6 +240,70 @@ export class AccountsController {
     return { data };
   }
 
+  @Get('accounts/account-types')
+  @ZodResponse({
+    status: 200,
+    description: 'Account type options retrieved successfully.',
+    type: SelectOptionListResponseDto,
+  })
+  @ApiOperation({
+    summary: 'List account type options',
+    description: 'Retrieves static account type select options.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  listAccountTypeOptions() {
+    const data = this.accountsService.listAccountTypeOptions();
+    return { data };
+  }
+
+  @Get('accounts/currencies')
+  @ZodResponse({
+    status: 200,
+    description: 'Currency options retrieved successfully.',
+    type: SelectOptionListResponseDto,
+  })
+  @ApiOperation({
+    summary: 'List currency options',
+    description: 'Retrieves static base currency select options.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  listCurrencyOptions() {
+    const data = this.accountsService.listCurrencyOptions();
+    return { data };
+  }
+
+  @Get('accounts/brokers')
+  @ZodResponse({
+    status: 200,
+    description: 'Broker options retrieved successfully.',
+    type: SelectOptionListResponseDto,
+  })
+  @ApiOperation({
+    summary: 'List broker options',
+    description: 'Retrieves static broker select options.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  listBrokerOptions() {
+    const data = this.accountsService.listBrokerOptions();
+    return { data };
+  }
+
+  @Get('accounts/timezones')
+  @ZodResponse({
+    status: 200,
+    description: 'Timezone options retrieved successfully.',
+    type: SelectOptionListResponseDto,
+  })
+  @ApiOperation({
+    summary: 'List timezone options',
+    description: 'Retrieves static IANA timezone select options.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  listTimezoneOptions() {
+    const data = this.accountsService.listTimezoneOptions();
+    return { data };
+  }
+
   @Post('accounts')
   @ApiOperation({
     summary: 'Create account',
@@ -317,8 +383,7 @@ export class AccountsController {
       userId: this.getCurrentUserId(user),
       groupId: query.group_id,
       archived: query.archived
-        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-          query.archived === AccountArchivedQueryEnum.TRUE
+        ? query.archived === AccountArchivedQueryEnum.TRUE
         : undefined,
     });
     return { data };

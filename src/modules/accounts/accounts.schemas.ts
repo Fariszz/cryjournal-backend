@@ -76,6 +76,15 @@ export const accountIdParamSchema = z.object({
   id: z.string().uuid().describe('Account identifier in UUID format.'),
 });
 
+export const selectOptionSchema = z.object({
+  value: z.string().describe('Option value stored in the account payload.'),
+  label: z.string().describe('Human-readable option label for UI selects.'),
+});
+
+export const selectOptionListResponseSchema = z.object({
+  data: z.array(selectOptionSchema).describe('List of select options.'),
+});
+
 export class AccountGroupCreateDto extends createZodDto(
   accountGroupCreateSchema,
 ) {}
@@ -95,3 +104,7 @@ export class AccountGroupIdParamDto extends createZodDto(
 ) {}
 
 export class AccountIdParamDto extends createZodDto(accountIdParamSchema) {}
+
+export class SelectOptionListResponseDto extends createZodDto(
+  selectOptionListResponseSchema,
+) {}
