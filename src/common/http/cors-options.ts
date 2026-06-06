@@ -1,5 +1,6 @@
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { env } from '@common/config/env';
+import { getCorsAllowedOrigins } from '@common/http/allowed-origins.util';
 
 const CORS_ALLOWED_METHODS = [
   'GET',
@@ -22,23 +23,9 @@ const CORS_ALLOWED_HEADERS = [
   'Content-Length',
 ];
 
-function getAllowedOrigins(): string | string[] {
-  const raw = env.CORS_ALLOWED_ORIGINS || '';
-
-  const origins = raw
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
-  if (origins.includes('*')) {
-    return '*';
-  }
-
-  return origins;
-}
 export function getCorsOptions(): CorsOptions {
   return {
-    origin: getAllowedOrigins(),
+    origin: getCorsAllowedOrigins(env.CORS_ALLOWED_ORIGINS),
     methods: CORS_ALLOWED_METHODS,
     allowedHeaders: CORS_ALLOWED_HEADERS,
     preflightContinue: false,

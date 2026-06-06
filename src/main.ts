@@ -17,12 +17,6 @@ async function bootstrap(): Promise<void> {
     cors: getCorsOptions(),
   });
 
-  // DEBUG — hapus setelah fix
-  const corsOpts = getCorsOptions();
-  console.log('[CORS] origin:', corsOpts.origin);
-  console.log('[CORS] methods:', corsOpts.methods);
-  console.log('[CORS] allowedHeaders:', corsOpts.allowedHeaders);
-
   app.useLogger(app.get(AppLoggerService));
 
   // Middleware Express
@@ -54,7 +48,7 @@ async function bootstrap(): Promise<void> {
     jsonDocumentUrl: 'docs/openapi.json',
   });
 
-  await app.listen(env.PORT); // ❗ tidak perlu host
+  await app.listen(env.PORT);
 }
 
 void bootstrap().catch((error: unknown) => {

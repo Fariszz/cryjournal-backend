@@ -3,10 +3,19 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { Request } from 'express';
+import { ACCESS_TOKEN_COOKIE } from '@common/auth/auth-cookie.util';
 import { hashAccessToken } from '@common/auth/access-token.util';
 import type { RequestUser } from '@common/auth/current-user.decorator';
 import { UsersService } from '@modules/users/users.service';
 import type { JwtPayload } from '@modules/auth/auth.types';
+
+function extractAccessTokenFromCookie(req: Request): string | null {
+  const token = req.cookies?.[ACCESS_TOKEN_COOKIE];
+  if (typeof token !== 'string' || token.length === 0) {
+    return null;
+  }
+  return token;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -15,7 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly usersService: UsersService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        extractAccessTokenFromCookie,
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       ignoreExpiration: false,
       passReqToCallback: true,
       secretOrKey: configService.get<string>(
@@ -34,7 +46,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       });
     }
 
-    const accessToken = this.extractBearerToken(req);
+    const accessToken = this.extractToken(req);
     if (!accessToken || !user.refreshTokenHash) {
       throw new UnauthorizedException({
         error: 'UNAUTHORIZED',
@@ -56,6 +68,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       name: user.name,
       roles: user.roles,
     };
+  }
+
+  private extractToken(req: Request): string | null {
+    const cookieToken = extractAccessTokenFromCookie(req);
+    if (cookieToken) {
+      return cookieToken;
+    }
+    return this.extractBearerToken(req);
   }
 
   private extractBearerToken(req: Request): string | null {

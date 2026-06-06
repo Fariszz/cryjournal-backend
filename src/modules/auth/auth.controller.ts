@@ -5,30 +5,38 @@ import {
   HttpCode,
   Request,
   Post,
+  Res,
   UseGuards,
   UnauthorizedException,
   Logger,
-  UsePipes,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import type { Request as ExpressRequest } from 'express';
+import type { Request as ExpressRequest, Response } from 'express';
 import { ZodValidationPipe } from '@common/validation/zod-validation.pipe';
+import { clearAuthCookie, setAuthCookie } from '@common/auth/auth-cookie.util';
+import { resolveRememberMe } from '@common/auth/auth-session.constants';
+import { env } from '@common/config/env';
+import {
+  buildOAuthErrorRedirectUrl,
+  resolveOAuthRedirectOrigin,
+} from '@common/http/allowed-origins.util';
 import type { RequestUser } from '../../common/auth/current-user.decorator';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { Public } from '../../common/auth/public.decorator';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import type { RegisterInput } from './schemas/register.schema';
-import { registerSchema } from './schemas/register.schema';
+import { RegisterDto, registerSchema } from './schemas/register.schema';
+import { LoginDto, loginSchema } from './schemas/login.schema';
 import { AuthService } from './auth.service';
 
 @ApiTags('Auth')
@@ -58,9 +66,12 @@ export class AuthController {
   })
   @ApiBadRequestResponse({ description: 'Request payload is invalid.' })
   @ApiConflictResponse({ description: 'Email is already registered.' })
-  @UsePipes(new ZodValidationPipe(registerSchema))
-  async register(@Body() body: RegisterInput) {
+  async register(
+    @Body(new ZodValidationPipe(registerSchema)) body: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const data = await this.authService.register(body);
+    setAuthCookie(res, data.accessToken, resolveRememberMe(body));
     return { data };
   }
 
@@ -89,21 +100,29 @@ export class AuthController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'User credentials are invalid.' })
-  async login(@CurrentUser() user: RequestUser | undefined) {
+  async login(
+    @CurrentUser() user: RequestUser | undefined,
+    @Body(new ZodValidationPipe(loginSchema)) body: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     if (!user) {
       throw new UnauthorizedException({
         error: 'UNAUTHORIZED',
         message: 'Unable to authenticate user credentials',
       });
     }
-
-    const data = await this.authService.login({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      roles: user.roles,
-      isActive: true,
-    });
+    const rememberMe = resolveRememberMe(body);
+    const data = await this.authService.login(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        roles: user.roles,
+        isActive: true,
+      },
+      rememberMe,
+    );
+    setAuthCookie(res, data.accessToken, rememberMe);
     return { data };
   }
 
@@ -112,7 +131,8 @@ export class AuthController {
   @Get('google')
   @ApiOperation({
     summary: 'Start Google OAuth login',
-    description: 'Redirects to Google OAuth consent screen.',
+    description:
+      'Redirects to Google OAuth consent screen. Optional redirectOrigin query must match CORS_ALLOWED_ORIGINS.',
   })
   @ApiOkResponse({ description: 'OAuth redirect was initiated.' })
   googleLogin(): void {}
@@ -124,21 +144,8 @@ export class AuthController {
     summary: 'Handle Google OAuth callback',
     description: 'Handles Google callback and returns login token payload.',
   })
-  @ApiOkResponse({
-    description: 'Google OAuth login completed successfully.',
-    schema: {
-      example: {
-        data: {
-          user: {
-            id: '2ce9ec65-2dcd-4474-85f9-84f941410814',
-            email: 'trader@example.com',
-            name: 'Ari Putra',
-          },
-          accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          expiresIn: 3600,
-        },
-      },
-    },
+  @ApiFoundResponse({
+    description: 'Google OAuth login completed; redirects to frontend.',
   })
   @ApiUnauthorizedResponse({ description: 'Google authentication failed.' })
   async googleCallback(
@@ -146,14 +153,19 @@ export class AuthController {
     request: ExpressRequest & {
       user?: RequestUser;
     },
+    @Res({ passthrough: true }) res: Response,
   ) {
+    const stateQuery = request.query?.state;
+    const requestedOrigin =
+      typeof stateQuery === 'string' ? stateQuery : undefined;
+    const redirectTarget = resolveOAuthRedirectOrigin(
+      requestedOrigin,
+      env.CORS_ALLOWED_ORIGINS,
+    );
     if (!request.user) {
-      throw new UnauthorizedException({
-        error: 'UNAUTHORIZED',
-        message: 'Google authentication failed',
-      });
+      res.redirect(buildOAuthErrorRedirectUrl(redirectTarget));
+      return;
     }
-
     const data = await this.authService.login({
       id: request.user.id,
       email: request.user.email,
@@ -161,7 +173,8 @@ export class AuthController {
       roles: request.user.roles,
       isActive: true,
     });
-    return { data };
+    setAuthCookie(res, data.accessToken);
+    res.redirect(redirectTarget);
   }
 
   @ApiBearerAuth()
@@ -182,15 +195,18 @@ export class AuthController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  async logout(@CurrentUser() user: RequestUser | undefined) {
+  async logout(
+    @CurrentUser() user: RequestUser | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     if (!user) {
       throw new UnauthorizedException({
         error: 'UNAUTHORIZED',
         message: 'Authentication is required',
       });
     }
-
     await this.authService.logout(user.id);
+    clearAuthCookie(res);
     return { data: { success: true } };
   }
 

@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { verifyPassword } from '@common/auth/password.util';
 import { hashAccessToken } from '@common/auth/access-token.util';
+import { getAuthSessionTtlSeconds } from '@common/auth/auth-session.constants';
 import type { AppRole } from '@common/constants/app-role.constants';
 import { UsersService } from '@modules/users/users.service';
 import type { AuthResponse, AuthenticatedUser, JwtPayload } from './auth.types';
@@ -42,13 +43,16 @@ export class AuthService {
       password: input.password,
     });
 
-    return this.createAuthResponse({
-      id: createdUser.id,
-      email: createdUser.email,
-      name: createdUser.name,
-      roles: createdUser.roles,
-      isActive: createdUser.isActive,
-    });
+    return this.createAuthResponse(
+      {
+        id: createdUser.id,
+        email: createdUser.email,
+        name: createdUser.name,
+        roles: createdUser.roles,
+        isActive: createdUser.isActive,
+      },
+      input.rememberMe ?? false,
+    );
   }
 
   async validateLocalUser(
@@ -88,17 +92,25 @@ export class AuthService {
   }
 
   async login(input: LoginInput): Promise<AuthResponse>;
-  async login(input: AuthenticatedUser): Promise<AuthResponse>;
-  async login(input: AuthenticatedUser | LoginInput): Promise<AuthResponse> {
+  async login(
+    input: AuthenticatedUser,
+    rememberMe?: boolean,
+  ): Promise<AuthResponse>;
+  async login(
+    input: AuthenticatedUser | LoginInput,
+    rememberMe = false,
+  ): Promise<AuthResponse> {
     if ('password' in input) {
       const authenticatedUser = await this.validateLocalUser(
         input.email,
         input.password,
       );
-      return this.createAuthResponse(authenticatedUser);
+      return this.createAuthResponse(
+        authenticatedUser,
+        input.rememberMe ?? false,
+      );
     }
-
-    return this.createAuthResponse(input);
+    return this.createAuthResponse(input, rememberMe);
   }
 
   async logout(userId: string): Promise<void> {
@@ -151,20 +163,20 @@ export class AuthService {
 
   private async createAuthResponse(
     user: AuthenticatedUser,
+    rememberMe = false,
   ): Promise<AuthResponse> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       roles: user.roles,
     };
-
-    const accessToken = this.jwtService.sign(payload);
+    const expiresIn = getAuthSessionTtlSeconds(rememberMe);
+    const accessToken = this.jwtService.sign(payload, { expiresIn });
     const accessTokenHash = hashAccessToken(accessToken);
-
     await this.usersService.updateRefreshTokenHash(user.id, accessTokenHash);
-
     return {
       accessToken,
+      expiresIn,
       user: {
         id: user.id,
         email: user.email,
