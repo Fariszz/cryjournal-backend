@@ -10,15 +10,7 @@
     {
       "src": "/(.*)",
       "dest": "dist/main.vercel.js",
-      "methods": [
-        "GET",
-        "HEAD",
-        "POST",
-        "PUT",
-        "PATCH",
-        "DELETE",
-        "OPTIONS"
-      ]
+      "methods": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     }
   ],
   "headers": [

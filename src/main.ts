@@ -9,18 +9,19 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
-import { getCorsOptions } from './common/http/cors-options';
+import { corsMiddleware } from './common/http/cors.middleware';
 import { AppLoggerService } from './common/logging/app-logger.service';
 import { env } from './common/config/env';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
-    cors: getCorsOptions(),
+    cors: false,
   });
 
   app.useLogger(app.get(AppLoggerService));
 
   // Middleware Express
+  app.use(corsMiddleware);
   app.use(helmet());
   app.use(cookieParser());
 

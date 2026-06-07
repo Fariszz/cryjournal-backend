@@ -50,27 +50,3 @@ export function applyCorsHeaders(req: CorsRequest, res: CorsResponse): void {
     res.setHeader('Access-Control-Max-Age', String(corsOptions.maxAge));
   }
 }
-
-/**
- * Handles OPTIONS preflight before the NestJS request pipeline runs.
- */
-export function handleCorsPreflightIfNeeded(
-  req: IncomingMessage,
-  res: ServerResponse,
-): boolean {
-  if (req.method !== 'OPTIONS') {
-    return false;
-  }
-  applyCorsHeaders(req, res);
-  const origin = req.headers.origin;
-  if (!origin || !isAllowedCorsOrigin(origin)) {
-    res.statusCode = 403;
-    res.end();
-    return true;
-  }
-  const corsOptions = getCorsOptions();
-  res.statusCode = corsOptions.optionsSuccessStatus ?? 204;
-  res.setHeader('Content-Length', '0');
-  res.end();
-  return true;
-}
