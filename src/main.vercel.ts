@@ -7,11 +7,7 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
-import {
-  applyCorsHeaders,
-  handleCorsPreflightIfNeeded,
-} from './common/http/apply-cors-headers.util';
-import { getCorsOptions } from './common/http/cors-options';
+import { corsMiddleware } from './common/http/cors.middleware';
 import { AppLoggerService } from './common/logging/app-logger.service';
 import { IncomingMessage, ServerResponse } from 'http';
 
@@ -19,9 +15,10 @@ let cachedApp: NestExpressApplication;
 
 async function bootstrap(): Promise<NestExpressApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    cors: getCorsOptions(),
+    cors: false,
   });
   app.useLogger(app.get(AppLoggerService));
+  app.use(corsMiddleware);
   app.use(helmet());
   app.use(cookieParser());
 
@@ -57,10 +54,6 @@ export default async function handler(
 ): Promise<void> {
   if (!cachedApp) {
     cachedApp = await bootstrap();
-  }
-  applyCorsHeaders(req, res);
-  if (handleCorsPreflightIfNeeded(req, res)) {
-    return;
   }
   const expressApp = cachedApp.getHttpAdapter().getInstance();
   expressApp(req, res);
