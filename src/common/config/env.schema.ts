@@ -15,7 +15,13 @@ export const envSchema = z.object({
     .string()
     .min(1)
     .default('http://localhost:5173,http://localhost:4173')
-    .describe('Comma-separated list of frontend origins allowed by CORS.'),
+    .describe(
+      'Comma-separated list of frontend origins allowed by CORS and OAuth redirects.',
+    ),
+  COOKIE_DOMAIN: z
+    .string()
+    .optional()
+    .describe('Optional cookie domain for cross-subdomain auth.'),
   DATABASE_URL: z
     .string()
     .min(1)

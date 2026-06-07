@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
@@ -16,12 +17,6 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     cors: getCorsOptions(),
   });
-
-  // DEBUG — hapus setelah fix
-  const corsOpts = getCorsOptions();
-  console.log('[CORS] origin:', corsOpts.origin);
-  console.log('[CORS] methods:', corsOpts.methods);
-  console.log('[CORS] allowedHeaders:', corsOpts.allowedHeaders);
 
   app.useLogger(app.get(AppLoggerService));
 
@@ -49,12 +44,14 @@ async function bootstrap(): Promise<void> {
     )
     .build();
 
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  const swaggerDocument = cleanupOpenApiDoc(
+    SwaggerModule.createDocument(app, swaggerConfig),
+  );
   SwaggerModule.setup('docs', app, swaggerDocument, {
     jsonDocumentUrl: 'docs/openapi.json',
   });
 
-  await app.listen(env.PORT); // ❗ tidak perlu host
+  await app.listen(env.PORT);
 }
 
 void bootstrap().catch((error: unknown) => {

@@ -1,0 +1,5187 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "description": "Checks API availability and returns current health status.",
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "ok"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Health check",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "description": "Retrieves profile data for the authenticated user.",
+        "operationId": "UsersController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user profile retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "2ce9ec65-2dcd-4474-85f9-84f941410814",
+                      "email": "trader@example.com",
+                      "name": "Ari Putra",
+                      "roles": [
+                        "TRADER"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user profile",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "description": "Retrieves paginated users list for administrators.",
+        "operationId": "AdminUsersController_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page.",
+            "schema": {
+              "example": 20
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "403": {
+            "description": "Admin role is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List users (admin)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/roles": {
+      "patch": {
+        "description": "Assigns one or more roles to a specific user.",
+        "operationId": "AdminUsersController_assignRoles",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User identifier.",
+            "schema": {
+              "example": "2ce9ec65-2dcd-4474-85f9-84f941410814",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "roles": [
+                    "TRADER",
+                    "ADMIN"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User roles updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "403": {
+            "description": "Admin role is required."
+          },
+          "404": {
+            "description": "User was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Assign user roles (admin)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/activate": {
+      "patch": {
+        "description": "Activates or deactivates a user account.",
+        "operationId": "AdminUsersController_updateActiveState",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User identifier.",
+            "schema": {
+              "example": "2ce9ec65-2dcd-4474-85f9-84f941410814",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "isActive": true
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User active status updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "403": {
+            "description": "Admin role is required."
+          },
+          "404": {
+            "description": "User was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update user active status (admin)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Creates a new user account using email and password.",
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User account registered successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "2ce9ec65-2dcd-4474-85f9-84f941410814",
+                      "email": "trader@example.com",
+                      "name": "Ari Putra"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "409": {
+            "description": "Email is already registered."
+          }
+        },
+        "summary": "Register user account",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Authenticates a user and returns access token data.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User authenticated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "user": {
+                        "id": "2ce9ec65-2dcd-4474-85f9-84f941410814",
+                        "email": "trader@example.com",
+                        "name": "Ari Putra"
+                      },
+                      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                      "expiresIn": 3600
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User credentials are invalid."
+          }
+        },
+        "summary": "Login with email and password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/google": {
+      "get": {
+        "description": "Redirects to Google OAuth consent screen. Optional redirectOrigin query must match CORS_ALLOWED_ORIGINS.",
+        "operationId": "AuthController_googleLogin",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OAuth redirect was initiated."
+          }
+        },
+        "summary": "Start Google OAuth login",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/google/callback": {
+      "get": {
+        "description": "Handles Google callback and returns login token payload.",
+        "operationId": "AuthController_googleCallback",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Google OAuth login completed; redirects to frontend."
+          },
+          "401": {
+            "description": "Google authentication failed."
+          }
+        },
+        "summary": "Handle Google OAuth callback",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Logs out the authenticated user session.",
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User logged out successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "success": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Logout current user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "description": "Returns authenticated user profile details.",
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user profile retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "2ce9ec65-2dcd-4474-85f9-84f941410814",
+                      "email": "trader@example.com",
+                      "name": "Ari Putra",
+                      "roles": [
+                        "TRADER"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user profile",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "description": "Retrieves current user application settings.",
+        "operationId": "SettingsController_getSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Settings retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get application settings",
+        "tags": [
+          "Settings"
+        ]
+      },
+      "put": {
+        "description": "Updates current user application settings.",
+        "operationId": "SettingsController_updateSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update application settings.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update application settings",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/v1/account-groups": {
+      "get": {
+        "description": "Retrieves all account groups owned by the authenticated user.",
+        "operationId": "AccountsController_listGroups",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Account groups retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+                        "name": "Futures Accounts",
+                        "description": "Group for derivatives trading accounts",
+                        "accountCount": 3
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "error": {
+                      "code": "UNAUTHORIZED",
+                      "message": "Authentication is required",
+                      "details": []
+                    },
+                    "meta": {
+                      "path": "/api/v1/account-groups",
+                      "method": "GET"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List account groups",
+        "tags": [
+          "Accounts"
+        ]
+      },
+      "post": {
+        "description": "Creates a new account group for the authenticated user.",
+        "operationId": "AccountsController_createGroup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "The details of the account group to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountGroupCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account group created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "9e305f2e-6f28-4910-a67f-3ba940f6688f",
+                      "name": "Scalping Group",
+                      "description": "Group for high-frequency setups"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "error": {
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid request payload",
+                      "details": [
+                        {
+                          "field": "name",
+                          "message": "Required"
+                        }
+                      ]
+                    },
+                    "meta": {
+                      "path": "/api/v1/account-groups",
+                      "method": "POST"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "error": {
+                      "code": "UNAUTHORIZED",
+                      "message": "Authentication is required",
+                      "details": []
+                    },
+                    "meta": {
+                      "path": "/api/v1/account-groups",
+                      "method": "POST"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "An account group with the same name already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "error": {
+                      "code": "CONFLICT",
+                      "message": "Account group already exists",
+                      "details": []
+                    },
+                    "meta": {
+                      "path": "/api/v1/account-groups",
+                      "method": "POST"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new account group",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/account-groups/{id}": {
+      "get": {
+        "description": "Retrieves an account group by identifier.",
+        "operationId": "AccountsController_getGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account group identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account group retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+                      "name": "Futures Accounts",
+                      "description": "Group for derivatives trading accounts",
+                      "accountCount": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account group was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account group detail",
+        "tags": [
+          "Accounts"
+        ]
+      },
+      "put": {
+        "description": "Updates account group fields by identifier.",
+        "operationId": "AccountsController_updateGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account group identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update account group data.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountGroupUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account group updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+                      "name": "Updated Futures Accounts",
+                      "description": "Updated group description"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account group was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update account group",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/account-types": {
+      "get": {
+        "description": "Retrieves static account type select options.",
+        "operationId": "AccountsController_listAccountTypeOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Account type options retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectOptionListResponseDto_Output"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List account type options",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/currencies": {
+      "get": {
+        "description": "Retrieves static base currency select options.",
+        "operationId": "AccountsController_listCurrencyOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Currency options retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectOptionListResponseDto_Output"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List currency options",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/brokers": {
+      "get": {
+        "description": "Retrieves static broker select options.",
+        "operationId": "AccountsController_listBrokerOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Broker options retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectOptionListResponseDto_Output"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List broker options",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/timezones": {
+      "get": {
+        "description": "Retrieves static IANA timezone select options.",
+        "operationId": "AccountsController_listTimezoneOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Timezone options retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectOptionListResponseDto_Output"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List timezone options",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts": {
+      "post": {
+        "description": "Creates a new trading account for the authenticated user.",
+        "operationId": "AccountsController_createAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create a trading account.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                      "name": "Binance Futures",
+                      "broker": "Binance",
+                      "accountType": "CRYPTO"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "409": {
+            "description": "An account with the same name already exists."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create account",
+        "tags": [
+          "Accounts"
+        ]
+      },
+      "get": {
+        "description": "Retrieves accounts using optional filtering parameters.",
+        "operationId": "AccountsController_listAccounts",
+        "parameters": [
+          {
+            "name": "group_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter accounts by account group identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+              "type": "string"
+            }
+          },
+          {
+            "name": "archived",
+            "required": false,
+            "in": "query",
+            "description": "Filter accounts by archived status.",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accounts retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                        "name": "Binance Futures",
+                        "archivedAt": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List accounts",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/bulk": {
+      "post": {
+        "description": "Creates multiple trading accounts for the authenticated user in a single atomic request.",
+        "operationId": "AccountsController_createAccounts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create multiple trading accounts.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AccountCreateDto"
+                },
+                "example": [
+                  {
+                    "name": "Binance Futures",
+                    "broker": "binance",
+                    "accountType": "crypto",
+                    "baseCurrency": "USD",
+                    "timezone": "Asia/Jakarta"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Accounts created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                        "name": "Binance Futures",
+                        "broker": "Binance",
+                        "accountType": "CRYPTO"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "One or more account groups were not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk create accounts",
+        "tags": [
+          "Accounts"
+        ]
+      },
+      "put": {
+        "description": "Updates multiple trading accounts with per-account payloads in a single atomic request.",
+        "operationId": "AccountsController_updateAccounts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update multiple trading accounts.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Bybit Futures"
+                    },
+                    "broker": {
+                      "type": "string",
+                      "example": "bybit"
+                    },
+                    "accountType": {
+                      "type": "string",
+                      "example": "crypto"
+                    },
+                    "baseCurrency": {
+                      "type": "string",
+                      "example": "USD"
+                    },
+                    "timezone": {
+                      "type": "string",
+                      "example": "Asia/Jakarta"
+                    }
+                  }
+                },
+                "example": [
+                  {
+                    "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                    "name": "Bybit Futures"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accounts updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                        "name": "Bybit Futures"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "One or more accounts or account groups were not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk update accounts",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{id}": {
+      "get": {
+        "description": "Retrieves a trading account by identifier.",
+        "operationId": "AccountsController_getAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                      "groupId": "f1f3a3e1-5d9f-4584-a704-f0fc641b7788",
+                      "name": "Binance Futures",
+                      "broker": "Binance",
+                      "accountType": "CRYPTO",
+                      "baseCurrency": "USD",
+                      "timezone": "Asia/Jakarta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account detail",
+        "tags": [
+          "Accounts"
+        ]
+      },
+      "put": {
+        "description": "Updates account details by identifier.",
+        "operationId": "AccountsController_updateAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update account fields.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                      "name": "Bybit Futures"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update account",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{id}/archive": {
+      "post": {
+        "description": "Archives an account by identifier.",
+        "operationId": "AccountsController_archiveAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Account archived successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                      "archivedAt": "2026-04-05T10:15:30.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive account",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{id}/restore": {
+      "post": {
+        "description": "Restores an archived account by identifier.",
+        "operationId": "AccountsController_restoreAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Account restored successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+                      "archivedAt": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Account was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore account",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/api/v1/instruments": {
+      "get": {
+        "description": "Retrieves all instruments for the authenticated user context.",
+        "operationId": "InstrumentsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Instruments retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List instruments",
+        "tags": [
+          "Instruments"
+        ]
+      },
+      "post": {
+        "description": "Creates a new instrument definition.",
+        "operationId": "InstrumentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create an instrument.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstrumentCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Instrument created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "f26f6d39-8ecf-4f46-ba1e-d23cb645823f",
+                      "symbol": "BTCUSDT",
+                      "category": "crypto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "409": {
+            "description": "Instrument already exists."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create instrument",
+        "tags": [
+          "Instruments"
+        ]
+      }
+    },
+    "/api/v1/strategies": {
+      "get": {
+        "description": "Retrieves all strategies.",
+        "operationId": "StrategiesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Strategies retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List strategies",
+        "tags": [
+          "Strategies"
+        ]
+      },
+      "post": {
+        "description": "Creates a new trading strategy.",
+        "operationId": "StrategiesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create a strategy.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StrategyCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Strategy created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "409": {
+            "description": "Strategy already exists."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create strategy",
+        "tags": [
+          "Strategies"
+        ]
+      }
+    },
+    "/api/v1/strategies/{id}": {
+      "get": {
+        "description": "Retrieves a strategy by identifier.",
+        "operationId": "StrategiesController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Strategy identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "0f9e1884-a06d-4a88-96c2-23d34f08fd79",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Strategy retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Strategy was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get strategy by ID",
+        "tags": [
+          "Strategies"
+        ]
+      },
+      "put": {
+        "description": "Updates strategy fields by identifier.",
+        "operationId": "StrategiesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Strategy identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "0f9e1884-a06d-4a88-96c2-23d34f08fd79",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update strategy fields.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StrategyUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Strategy updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Strategy was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update strategy",
+        "tags": [
+          "Strategies"
+        ]
+      },
+      "delete": {
+        "description": "Deletes a strategy by identifier.",
+        "operationId": "StrategiesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Strategy identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "0f9e1884-a06d-4a88-96c2-23d34f08fd79",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Strategy deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Strategy was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete strategy",
+        "tags": [
+          "Strategies"
+        ]
+      }
+    },
+    "/api/v1/strategies/{id}/analytics": {
+      "get": {
+        "description": "Retrieves analytics summary for a strategy.",
+        "operationId": "StrategiesController_analytics",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Strategy identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "0f9e1884-a06d-4a88-96c2-23d34f08fd79",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Strategy analytics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Strategy was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get strategy analytics",
+        "tags": [
+          "Strategies"
+        ]
+      }
+    },
+    "/api/v1/trades": {
+      "post": {
+        "description": "Creates a new trade record.",
+        "operationId": "TradesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create a trade.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TradeCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Trade created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create trade",
+        "tags": [
+          "Trades"
+        ]
+      },
+      "get": {
+        "description": "Retrieves paginated trades using optional filters.",
+        "operationId": "TradesController_list",
+        "parameters": [
+          {
+            "name": "account_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by account ID.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "instrument_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by instrument ID.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "strategy_id",
+            "required": false,
+            "in": "query",
+            "description": "Filter by strategy ID.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by trade type.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "executed",
+                "missed"
+              ]
+            }
+          },
+          {
+            "name": "date_from",
+            "required": false,
+            "in": "query",
+            "description": "Filter start date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": false,
+            "in": "query",
+            "description": "Filter end date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "session",
+            "required": false,
+            "in": "query",
+            "description": "Filter by trading session.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tags",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated tag identifiers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "demons",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated demon identifiers.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": 0,
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page_size",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page.",
+            "schema": {
+              "maximum": 100,
+              "exclusiveMinimum": 0,
+              "default": 20,
+              "example": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trades retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [],
+                    "meta": {
+                      "page": 1,
+                      "page_size": 20,
+                      "total_items": 0,
+                      "total_pages": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List trades",
+        "tags": [
+          "Trades"
+        ]
+      }
+    },
+    "/api/v1/trades/{id}": {
+      "put": {
+        "description": "Updates trade fields by identifier.",
+        "operationId": "TradesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Trade identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "72e52434-a5df-4859-a563-09af31a89b8c",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update trade fields.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TradeUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Trade updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Trade was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update trade",
+        "tags": [
+          "Trades"
+        ]
+      },
+      "get": {
+        "description": "Retrieves a trade by identifier.",
+        "operationId": "TradesController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Trade identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "72e52434-a5df-4859-a563-09af31a89b8c",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trade retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Trade was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get trade by ID",
+        "tags": [
+          "Trades"
+        ]
+      }
+    },
+    "/api/v1/trades/bulk": {
+      "post": {
+        "description": "Applies bulk updates to multiple trades.",
+        "operationId": "TradesController_bulk",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload for bulk trade updates.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TradeBulkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Trades updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk update trades",
+        "tags": [
+          "Trades"
+        ]
+      }
+    },
+    "/api/v1/trade-attachments": {
+      "post": {
+        "description": "Uploads a multipart attachment and links it to a trade.",
+        "operationId": "TradesController_uploadAttachment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Attachment uploaded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Multipart upload or form fields are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload trade attachment",
+        "tags": [
+          "Trades"
+        ]
+      }
+    },
+    "/api/v1/trade-attachments/{id}": {
+      "delete": {
+        "description": "Removes a trade attachment by identifier.",
+        "operationId": "TradesController_deleteAttachment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Trade attachment identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "8f4bca66-18d4-4ceb-92a4-c9af5a4e5d4e",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attachment deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Attachment was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete trade attachment",
+        "tags": [
+          "Trades"
+        ]
+      }
+    },
+    "/api/v1/daily-journals": {
+      "get": {
+        "description": "Retrieves paginated daily journals with optional filters.",
+        "operationId": "JournalsController_list",
+        "parameters": [
+          {
+            "name": "date_from",
+            "required": false,
+            "in": "query",
+            "description": "Optional start date filter (YYYY-MM-DD).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": false,
+            "in": "query",
+            "description": "Optional end date filter (YYYY-MM-DD).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_id",
+            "required": false,
+            "in": "query",
+            "description": "Optional account identifier filter.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": 0,
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page_size",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page.",
+            "schema": {
+              "maximum": 100,
+              "exclusiveMinimum": 0,
+              "default": 20,
+              "example": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Journals retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [],
+                    "meta": {
+                      "page": 1,
+                      "page_size": 20,
+                      "total_items": 0,
+                      "total_pages": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List daily journals",
+        "tags": [
+          "Journals"
+        ]
+      },
+      "post": {
+        "description": "Creates a new daily journal entry.",
+        "operationId": "JournalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create a daily journal.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JournalCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Daily journal created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create daily journal",
+        "tags": [
+          "Journals"
+        ]
+      }
+    },
+    "/api/v1/daily-journals/{id}": {
+      "get": {
+        "description": "Retrieves a daily journal entry by identifier.",
+        "operationId": "JournalsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Daily journal identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "659a15a6-6d20-4ac4-9e56-12fffdadcfca",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daily journal retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Daily journal was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get daily journal by ID",
+        "tags": [
+          "Journals"
+        ]
+      },
+      "put": {
+        "description": "Updates daily journal fields by identifier.",
+        "operationId": "JournalsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Daily journal identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "659a15a6-6d20-4ac4-9e56-12fffdadcfca",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update daily journal fields.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JournalUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Daily journal updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Daily journal was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update daily journal",
+        "tags": [
+          "Journals"
+        ]
+      }
+    },
+    "/api/v1/daily-journal-attachments": {
+      "post": {
+        "description": "Uploads a multipart attachment and links it to a daily journal.",
+        "operationId": "JournalsController_uploadAttachment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Attachment uploaded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Multipart upload or form fields are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload daily journal attachment",
+        "tags": [
+          "Journals"
+        ]
+      }
+    },
+    "/api/v1/daily-journal-attachments/{id}": {
+      "delete": {
+        "description": "Removes a daily journal attachment by identifier.",
+        "operationId": "JournalsController_deleteAttachment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Daily journal attachment identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "d71f38d6-3d03-4ac5-a664-bff4f53c0f49",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attachment deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Attachment was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete daily journal attachment",
+        "tags": [
+          "Journals"
+        ]
+      }
+    },
+    "/api/v1/demons": {
+      "get": {
+        "description": "Retrieves all trading demons for the authenticated user.",
+        "operationId": "DemonsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Demons retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List demons",
+        "tags": [
+          "Demons"
+        ]
+      },
+      "post": {
+        "description": "Creates a new trading demon definition.",
+        "operationId": "DemonsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create a demon.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemonCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Demon created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "f6f80fd1-af2a-495a-903d-48d2db5688fe",
+                      "name": "FOMO"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create demon",
+        "tags": [
+          "Demons"
+        ]
+      }
+    },
+    "/api/v1/demons/{id}": {
+      "get": {
+        "description": "Retrieves a demon by identifier.",
+        "operationId": "DemonsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Demon identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f6f80fd1-af2a-495a-903d-48d2db5688fe",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Demon retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Demon was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get demon by ID",
+        "tags": [
+          "Demons"
+        ]
+      },
+      "put": {
+        "description": "Updates demon fields by identifier.",
+        "operationId": "DemonsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Demon identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f6f80fd1-af2a-495a-903d-48d2db5688fe",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to update demon fields.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemonUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Demon updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Demon was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update demon",
+        "tags": [
+          "Demons"
+        ]
+      }
+    },
+    "/api/v1/demons/{id}/evidence": {
+      "post": {
+        "description": "Adds evidence log entry for a demon.",
+        "operationId": "DemonsController_createEvidence",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Demon identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f6f80fd1-af2a-495a-903d-48d2db5688fe",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Payload to create demon evidence.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Demon evidence created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Demon was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create demon evidence",
+        "tags": [
+          "Demons"
+        ]
+      },
+      "get": {
+        "description": "Retrieves evidence logs for a demon.",
+        "operationId": "DemonsController_listEvidence",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Demon identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f6f80fd1-af2a-495a-903d-48d2db5688fe",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Demon evidence retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Demon was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List demon evidence",
+        "tags": [
+          "Demons"
+        ]
+      }
+    },
+    "/api/v1/demons/{id}/performance": {
+      "get": {
+        "description": "Returns performance analytics for a demon.",
+        "operationId": "DemonsController_performance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Demon identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "f6f80fd1-af2a-495a-903d-48d2db5688fe",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Demon performance retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          },
+          "404": {
+            "description": "Demon was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get demon performance",
+        "tags": [
+          "Demons"
+        ]
+      }
+    },
+    "/api/v1/analytics/home": {
+      "get": {
+        "description": "Returns aggregated analytics for the dashboard home view.",
+        "operationId": "AnalyticsController_home",
+        "parameters": [
+          {
+            "name": "date_from",
+            "required": true,
+            "in": "query",
+            "description": "Start date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": true,
+            "in": "query",
+            "description": "End date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-05T23:59:59.999Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_id",
+            "required": false,
+            "in": "query",
+            "description": "Optional account identifier filter.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Home analytics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "totalTrades": 24,
+                      "winRate": 58.3
+                    },
+                    "meta": {
+                      "date_from": "2026-04-01T00:00:00.000Z",
+                      "date_to": "2026-04-05T23:59:59.999Z",
+                      "timezone": "Asia/Jakarta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get home analytics",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/accounts/{id}/overview": {
+      "get": {
+        "description": "Returns summary analytics for a specific account.",
+        "operationId": "AnalyticsController_overview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_from",
+            "required": true,
+            "in": "query",
+            "description": "Start date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": true,
+            "in": "query",
+            "description": "End date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account overview retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {},
+                    "meta": {
+                      "filters_applied": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path or query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account overview analytics",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/accounts/{id}/instruments": {
+      "get": {
+        "description": "Returns paginated analytics grouped by instrument for an account.",
+        "operationId": "AnalyticsController_instruments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_from",
+            "required": true,
+            "in": "query",
+            "description": "Start date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": true,
+            "in": "query",
+            "description": "End date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number.",
+            "schema": {
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": 0,
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page_size",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page.",
+            "schema": {
+              "maximum": 100,
+              "exclusiveMinimum": 0,
+              "default": 20,
+              "example": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Instrument analytics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [],
+                    "meta": {
+                      "page": 1,
+                      "page_size": 20,
+                      "total_items": 0,
+                      "total_pages": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path or query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account instrument analytics",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/accounts/{id}/sessions": {
+      "get": {
+        "description": "Returns trading-session analytics for an account.",
+        "operationId": "AnalyticsController_sessions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_from",
+            "required": true,
+            "in": "query",
+            "description": "Start date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": true,
+            "in": "query",
+            "description": "End date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session analytics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path or query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account session analytics",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/accounts/{id}/entry-time-heatmap": {
+      "get": {
+        "description": "Returns heatmap analytics for entry times by account.",
+        "operationId": "AnalyticsController_heatmap",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_from",
+            "required": true,
+            "in": "query",
+            "description": "Start date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": true,
+            "in": "query",
+            "description": "End date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Heatmap analytics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path or query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account entry time heatmap",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/accounts/{id}/pnl-calendar": {
+      "get": {
+        "description": "Returns monthly profit-and-loss calendar analytics for an account.",
+        "operationId": "AnalyticsController_pnlCalendar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Target month in YYYY-MM format. Defaults to current month.",
+            "schema": {
+              "example": "2026-04",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PnL calendar retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path or query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get account PnL calendar",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/accounts/{id}/trades/recent": {
+      "get": {
+        "description": "Returns the most recent trades for a specific account.",
+        "operationId": "AnalyticsController_recent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Account identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "5a8f198f-31ef-4584-b806-e4f57ff52cb6",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of trades to return.",
+            "schema": {
+              "maximum": 100,
+              "exclusiveMinimum": 0,
+              "default": 10,
+              "example": 5,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent trades retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path or query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get recent account trades",
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "description": "Searches across supported resources using a free-text query.",
+        "operationId": "SearchController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search keyword.",
+            "schema": {
+              "default": "",
+              "example": "BTC breakout",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search resources",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/import/trades": {
+      "post": {
+        "description": "Imports trade records from a multipart CSV file upload.",
+        "operationId": "ImportExportController_importTrades",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Trades imported successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "imported_count": 12,
+                      "errors": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Multipart upload is invalid or file content is malformed."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import trades from CSV",
+        "tags": [
+          "Import Export"
+        ]
+      }
+    },
+    "/api/v1/export/trades.csv": {
+      "get": {
+        "description": "Exports trade records as a CSV file.",
+        "operationId": "ImportExportController_exportTrades",
+        "parameters": [
+          {
+            "name": "date_from",
+            "required": false,
+            "in": "query",
+            "description": "Optional start date-time filter in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": false,
+            "in": "query",
+            "description": "Optional end date-time filter in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-05T23:59:59.999Z",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV export generated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "id,account_id,instrument_id,type,direction,entry_datetime\n123,..."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export trades to CSV",
+        "tags": [
+          "Import Export"
+        ]
+      }
+    },
+    "/api/v1/export/journals.csv": {
+      "get": {
+        "description": "Exports daily journal records as a CSV file.",
+        "operationId": "ImportExportController_exportJournals",
+        "parameters": [
+          {
+            "name": "date_from",
+            "required": false,
+            "in": "query",
+            "description": "Optional start date-time filter in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "required": false,
+            "in": "query",
+            "description": "Optional end date-time filter in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-05T23:59:59.999Z",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV export generated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "id,date,account_id,mood,energy,focus,confidence\n123,..."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export journals to CSV",
+        "tags": [
+          "Import Export"
+        ]
+      }
+    },
+    "/api/v1/economic-calendar": {
+      "get": {
+        "description": "Retrieves economic events in a specified date-time range.",
+        "operationId": "EconomicCalendarController_getEvents",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "description": "Range start date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-05T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "description": "Range end date-time in ISO 8601 format.",
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "example": "2026-04-06T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "impact",
+            "required": false,
+            "in": "query",
+            "description": "Optional impact level filter.",
+            "schema": {
+              "example": "high",
+              "type": "string"
+            }
+          },
+          {
+            "name": "currency",
+            "required": false,
+            "in": "query",
+            "description": "Optional currency filter.",
+            "schema": {
+              "example": "USD",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Economic events retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query parameters are invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get economic calendar events",
+        "tags": [
+          "Economic Calendar"
+        ]
+      }
+    },
+    "/api/v1/trades/{id}/context-events": {
+      "post": {
+        "description": "Attaches an economic calendar event context to a trade.",
+        "operationId": "EconomicCalendarController_attach",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Trade identifier.",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "72e52434-a5df-4859-a563-09af31a89b8c",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Economic event payload attached to a trade.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachContextEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Context event attached successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Path parameter or payload is invalid."
+          },
+          "401": {
+            "description": "Authentication is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Attach context event to trade",
+        "tags": [
+          "Economic Calendar"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "CryJournal API",
+    "description": "OpenAPI documentation for CryJournal",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "User email address in valid email format."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "User password with minimum 8 characters."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "User display name (minimum 1 character)."
+          },
+          "rememberMe": {
+            "default": false,
+            "description": "When true, keeps auth session for 30 days instead of 1 day.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "name"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "User email address in valid email format."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "description": "User password (minimum 1 character)."
+          },
+          "rememberMe": {
+            "default": false,
+            "description": "When true, keeps auth session for 30 days instead of 1 day.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "defaultTimezone": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Default IANA timezone (minimum 1 character)."
+          },
+          "defaultCurrency": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Default currency code (minimum 1 character)."
+          },
+          "defaultDateRangePreset": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Default date range preset key (minimum 1 character)."
+          },
+          "sessionDefinitions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Session key (minimum 1 character)."
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Session display label (minimum 1 character)."
+                },
+                "start": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Session start time, for example 08:00 (minimum 1 character)."
+                },
+                "end": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Session end time, for example 16:00 (minimum 1 character)."
+                }
+              },
+              "required": [
+                "key",
+                "label",
+                "start",
+                "end"
+              ]
+            },
+            "description": "Optional list of custom trading session definitions."
+          },
+          "riskParameters": {
+            "description": "Optional key-value risk management parameters.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "defaultTimezone",
+          "defaultCurrency",
+          "defaultDateRangePreset"
+        ]
+      },
+      "AccountGroupCreateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Account group name (minimum 1 character)."
+          },
+          "description": {
+            "description": "Optional account group description.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "AccountGroupUpdateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Account group name (minimum 1 character)."
+          },
+          "description": {
+            "description": "Optional account group description.",
+            "type": "string"
+          }
+        }
+      },
+      "SelectOptionListResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "description": "Option value stored in the account payload."
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Human-readable option label for UI selects."
+                }
+              },
+              "required": [
+                "value",
+                "label"
+              ],
+              "additionalProperties": false
+            },
+            "description": "List of select options."
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "AccountCreateDto": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "description": "Optional account group identifier. Use null for ungrouped accounts.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Trading account name (minimum 1 character)."
+          },
+          "broker": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Broker or exchange name (minimum 1 character)."
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "crypto",
+              "forex",
+              "stocks"
+            ],
+            "description": "Account type value based on supported account type enum."
+          },
+          "baseCurrency": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Account base currency code (minimum 1 character)."
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "description": "IANA timezone for the account, for example Asia/Jakarta."
+          },
+          "startingBalance": {
+            "description": "Optional account starting balance.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "broker",
+          "accountType",
+          "baseCurrency",
+          "timezone"
+        ]
+      },
+      "AccountUpdateDto": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "description": "Optional account group identifier. Use null for ungrouped accounts.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Trading account name (minimum 1 character)."
+          },
+          "broker": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Broker or exchange name (minimum 1 character)."
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "crypto",
+              "forex",
+              "stocks"
+            ],
+            "description": "Account type value based on supported account type enum."
+          },
+          "baseCurrency": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Account base currency code (minimum 1 character)."
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "description": "IANA timezone for the account, for example Asia/Jakarta."
+          },
+          "startingBalance": {
+            "description": "Optional account starting balance.",
+            "type": "number"
+          }
+        }
+      },
+      "InstrumentCreateDto": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Instrument symbol (minimum 1 character)."
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Instrument category (minimum 1 character)."
+          }
+        },
+        "required": [
+          "symbol",
+          "category"
+        ]
+      },
+      "StrategyCreateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Strategy name (minimum 1 character)."
+          },
+          "description": {
+            "description": "Optional strategy description.",
+            "type": "string"
+          },
+          "tags": {
+            "default": [],
+            "description": "List of strategy tags.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Strategy tag text."
+            }
+          },
+          "playbookScoreSchema": {
+            "description": "Optional score mapping for playbook criteria.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "steps": {
+            "default": [],
+            "description": "Ordered strategy execution steps.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stepIndex": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Step order index (integer starting from 0)."
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Step title (minimum 1 character)."
+                },
+                "description": {
+                  "description": "Optional step description.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stepIndex",
+                "title"
+              ]
+            }
+          },
+          "confluences": {
+            "default": [],
+            "description": "Confluence rules attached to the strategy.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Confluence name (minimum 1 character)."
+                },
+                "impactWeight": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Confluence impact weight from 0 to 100."
+                },
+                "ruleType": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Confluence rule type (minimum 1 character)."
+                },
+                "ruleConfig": {
+                  "description": "Optional rule configuration object.",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                "sortOrder": {
+                  "default": 0,
+                  "description": "Display sort order (integer starting from 0).",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "name",
+                "impactWeight",
+                "ruleType"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "StrategyUpdateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Strategy name (minimum 1 character)."
+          },
+          "description": {
+            "description": "Optional strategy description.",
+            "type": "string"
+          },
+          "tags": {
+            "default": [],
+            "description": "List of strategy tags.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Strategy tag text."
+            }
+          },
+          "playbookScoreSchema": {
+            "description": "Optional score mapping for playbook criteria.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "steps": {
+            "default": [],
+            "description": "Ordered strategy execution steps.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stepIndex": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Step order index (integer starting from 0)."
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Step title (minimum 1 character)."
+                },
+                "description": {
+                  "description": "Optional step description.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stepIndex",
+                "title"
+              ]
+            }
+          },
+          "confluences": {
+            "default": [],
+            "description": "Confluence rules attached to the strategy.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Confluence name (minimum 1 character)."
+                },
+                "impactWeight": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Confluence impact weight from 0 to 100."
+                },
+                "ruleType": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Confluence rule type (minimum 1 character)."
+                },
+                "ruleConfig": {
+                  "description": "Optional rule configuration object.",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                "sortOrder": {
+                  "default": 0,
+                  "description": "Display sort order (integer starting from 0).",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "name",
+                "impactWeight",
+                "ruleType"
+              ]
+            }
+          }
+        }
+      },
+      "TradeCreateDto": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Account identifier in UUID format."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "executed",
+              "missed"
+            ],
+            "description": "Trade type value based on supported trade type enum."
+          },
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Instrument identifier in UUID format."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "long",
+              "short"
+            ],
+            "description": "Trade direction value based on supported direction enum."
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "description": "IANA timezone for the trade, for example Asia/Jakarta."
+          },
+          "entryDatetime": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+            "description": "Trade entry date-time in ISO 8601 format."
+          },
+          "exitDatetime": {
+            "description": "Optional trade exit date-time in ISO 8601 format.",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "entryTimeframe": {
+            "description": "Optional entry timeframe label, for example 15m.",
+            "type": "string"
+          },
+          "tradingSession": {
+            "description": "Optional trading session label.",
+            "type": "string"
+          },
+          "entryPrice": {
+            "description": "Optional entry price value.",
+            "type": "number"
+          },
+          "exitPrice": {
+            "description": "Optional exit price value.",
+            "type": "number"
+          },
+          "stopLoss": {
+            "description": "Optional stop-loss price value.",
+            "type": "number"
+          },
+          "takeProfit": {
+            "description": "Optional take-profit price value.",
+            "type": "number"
+          },
+          "dollarRisk": {
+            "description": "Optional dollar risk amount.",
+            "type": "number"
+          },
+          "positionSize": {
+            "description": "Optional position size value.",
+            "type": "number"
+          },
+          "positionSizeUnit": {
+            "description": "Optional position size unit enum value.",
+            "type": "string",
+            "enum": [
+              "lot",
+              "usd",
+              "contract"
+            ]
+          },
+          "brokerCommission": {
+            "description": "Optional broker commission amount.",
+            "type": "number"
+          },
+          "swap": {
+            "description": "Optional swap fee amount.",
+            "type": "number"
+          },
+          "fundingFee": {
+            "description": "Optional funding fee amount.",
+            "type": "number"
+          },
+          "positionType": {
+            "description": "Optional position type enum value.",
+            "type": "string",
+            "enum": [
+              "spot",
+              "futures"
+            ]
+          },
+          "positionTyppe": {
+            "description": "Deprecated alias for positionType.",
+            "type": "string",
+            "enum": [
+              "spot",
+              "futures"
+            ]
+          },
+          "leverage": {
+            "description": "Optional leverage multiplier.",
+            "type": "number"
+          },
+          "marginMode": {
+            "description": "Optional margin mode enum value.",
+            "type": "string",
+            "enum": [
+              "cross",
+              "isolated"
+            ]
+          },
+          "strategyId": {
+            "description": "Optional strategy identifier in UUID format.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "thesis": {
+            "description": "Optional pre-trade thesis note.",
+            "type": "string"
+          },
+          "postAnalysis": {
+            "description": "Optional post-trade analysis note.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Optional additional trade note.",
+            "type": "string"
+          },
+          "tagIds": {
+            "description": "Optional list of related tag identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Tag identifier in UUID format."
+            }
+          },
+          "demonIds": {
+            "description": "Optional list of related demon identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Demon identifier in UUID format."
+            }
+          },
+          "marketConditionTagIds": {
+            "description": "Optional list of related market condition tag identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Market condition tag identifier in UUID format."
+            }
+          },
+          "marketConditionIds": {
+            "description": "Optional list of related market condition identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Market condition identifier in UUID format."
+            }
+          },
+          "confluenceChecks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "confluenceId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "description": "Confluence identifier in UUID format."
+                },
+                "checked": {
+                  "type": "boolean",
+                  "description": "Whether the confluence was satisfied."
+                }
+              },
+              "required": [
+                "confluenceId",
+                "checked"
+              ]
+            },
+            "description": "Optional checklist of confluence outcomes."
+          }
+        },
+        "required": [
+          "accountId",
+          "type",
+          "instrumentId",
+          "direction",
+          "timezone",
+          "entryDatetime"
+        ]
+      },
+      "TradeUpdateDto": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Account identifier in UUID format."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "executed",
+              "missed"
+            ],
+            "description": "Trade type value based on supported trade type enum."
+          },
+          "instrumentId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Instrument identifier in UUID format."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "long",
+              "short"
+            ],
+            "description": "Trade direction value based on supported direction enum."
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "description": "IANA timezone for the trade, for example Asia/Jakarta."
+          },
+          "entryDatetime": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+            "description": "Trade entry date-time in ISO 8601 format."
+          },
+          "exitDatetime": {
+            "description": "Optional trade exit date-time in ISO 8601 format.",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "entryTimeframe": {
+            "description": "Optional entry timeframe label, for example 15m.",
+            "type": "string"
+          },
+          "tradingSession": {
+            "description": "Optional trading session label.",
+            "type": "string"
+          },
+          "entryPrice": {
+            "description": "Optional entry price value.",
+            "type": "number"
+          },
+          "exitPrice": {
+            "description": "Optional exit price value.",
+            "type": "number"
+          },
+          "stopLoss": {
+            "description": "Optional stop-loss price value.",
+            "type": "number"
+          },
+          "takeProfit": {
+            "description": "Optional take-profit price value.",
+            "type": "number"
+          },
+          "dollarRisk": {
+            "description": "Optional dollar risk amount.",
+            "type": "number"
+          },
+          "positionSize": {
+            "description": "Optional position size value.",
+            "type": "number"
+          },
+          "positionSizeUnit": {
+            "description": "Optional position size unit enum value.",
+            "type": "string",
+            "enum": [
+              "lot",
+              "usd",
+              "contract"
+            ]
+          },
+          "brokerCommission": {
+            "description": "Optional broker commission amount.",
+            "type": "number"
+          },
+          "swap": {
+            "description": "Optional swap fee amount.",
+            "type": "number"
+          },
+          "fundingFee": {
+            "description": "Optional funding fee amount.",
+            "type": "number"
+          },
+          "positionType": {
+            "description": "Optional position type enum value.",
+            "type": "string",
+            "enum": [
+              "spot",
+              "futures"
+            ]
+          },
+          "positionTyppe": {
+            "description": "Deprecated alias for positionType.",
+            "type": "string",
+            "enum": [
+              "spot",
+              "futures"
+            ]
+          },
+          "leverage": {
+            "description": "Optional leverage multiplier.",
+            "type": "number"
+          },
+          "marginMode": {
+            "description": "Optional margin mode enum value.",
+            "type": "string",
+            "enum": [
+              "cross",
+              "isolated"
+            ]
+          },
+          "strategyId": {
+            "description": "Optional strategy identifier in UUID format.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "thesis": {
+            "description": "Optional pre-trade thesis note.",
+            "type": "string"
+          },
+          "postAnalysis": {
+            "description": "Optional post-trade analysis note.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Optional additional trade note.",
+            "type": "string"
+          },
+          "tagIds": {
+            "description": "Optional list of related tag identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Tag identifier in UUID format."
+            }
+          },
+          "demonIds": {
+            "description": "Optional list of related demon identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Demon identifier in UUID format."
+            }
+          },
+          "marketConditionTagIds": {
+            "description": "Optional list of related market condition tag identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Market condition tag identifier in UUID format."
+            }
+          },
+          "marketConditionIds": {
+            "description": "Optional list of related market condition identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Market condition identifier in UUID format."
+            }
+          },
+          "confluenceChecks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "confluenceId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "description": "Confluence identifier in UUID format."
+                },
+                "checked": {
+                  "type": "boolean",
+                  "description": "Whether the confluence was satisfied."
+                }
+              },
+              "required": [
+                "confluenceId",
+                "checked"
+              ]
+            },
+            "description": "Optional checklist of confluence outcomes."
+          }
+        }
+      },
+      "TradeBulkDto": {
+        "type": "object",
+        "properties": {
+          "tradeIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Trade identifier in UUID format."
+            },
+            "description": "List of trade identifiers to update (minimum 1 item)."
+          },
+          "strategyId": {
+            "description": "Optional strategy identifier to assign to selected trades.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tagIds": {
+            "description": "Optional tag identifiers to assign to selected trades.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Tag identifier in UUID format."
+            }
+          }
+        },
+        "required": [
+          "tradeIds"
+        ]
+      },
+      "JournalCreateDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Journal date in string format (recommended YYYY-MM-DD)."
+          },
+          "accountId": {
+            "description": "Optional related account identifier in UUID format.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "mood": {
+            "description": "Optional mood score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "energy": {
+            "description": "Optional energy score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "focus": {
+            "description": "Optional focus score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "confidence": {
+            "description": "Optional confidence score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "plan": {
+            "description": "Optional trading plan notes.",
+            "type": "string"
+          },
+          "executionNotes": {
+            "description": "Optional execution notes written after trading session.",
+            "type": "string"
+          },
+          "lessons": {
+            "description": "Optional lessons learned.",
+            "type": "string"
+          },
+          "nextActions": {
+            "description": "Optional actionable follow-up tasks.",
+            "type": "string"
+          },
+          "tradeIds": {
+            "description": "Optional list of linked trade identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Trade identifier in UUID format."
+            }
+          },
+          "demonIds": {
+            "description": "Optional list of linked demon identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Demon identifier in UUID format."
+            }
+          }
+        },
+        "required": [
+          "date"
+        ]
+      },
+      "JournalUpdateDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Journal date in string format (recommended YYYY-MM-DD)."
+          },
+          "accountId": {
+            "description": "Optional related account identifier in UUID format.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "mood": {
+            "description": "Optional mood score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "energy": {
+            "description": "Optional energy score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "focus": {
+            "description": "Optional focus score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "confidence": {
+            "description": "Optional confidence score from 1 to 5.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "plan": {
+            "description": "Optional trading plan notes.",
+            "type": "string"
+          },
+          "executionNotes": {
+            "description": "Optional execution notes written after trading session.",
+            "type": "string"
+          },
+          "lessons": {
+            "description": "Optional lessons learned.",
+            "type": "string"
+          },
+          "nextActions": {
+            "description": "Optional actionable follow-up tasks.",
+            "type": "string"
+          },
+          "tradeIds": {
+            "description": "Optional list of linked trade identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Trade identifier in UUID format."
+            }
+          },
+          "demonIds": {
+            "description": "Optional list of linked demon identifiers.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Demon identifier in UUID format."
+            }
+          }
+        }
+      },
+      "DemonCreateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Demon name (minimum 1 character)."
+          },
+          "trigger": {
+            "description": "Optional trigger condition description.",
+            "type": "string"
+          },
+          "pattern": {
+            "description": "Optional recurring behavior pattern.",
+            "type": "string"
+          },
+          "consequence": {
+            "description": "Optional negative consequence description.",
+            "type": "string"
+          },
+          "counterPlan": {
+            "description": "Optional counter-plan to handle the demon.",
+            "type": "string"
+          },
+          "preventionChecklist": {
+            "default": [],
+            "description": "Preventive checklist items to avoid this demon.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Checklist item text."
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "DemonUpdateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Demon name (minimum 1 character)."
+          },
+          "trigger": {
+            "description": "Optional trigger condition description.",
+            "type": "string"
+          },
+          "pattern": {
+            "description": "Optional recurring behavior pattern.",
+            "type": "string"
+          },
+          "consequence": {
+            "description": "Optional negative consequence description.",
+            "type": "string"
+          },
+          "counterPlan": {
+            "description": "Optional counter-plan to handle the demon.",
+            "type": "string"
+          },
+          "preventionChecklist": {
+            "default": [],
+            "description": "Preventive checklist items to avoid this demon.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Checklist item text."
+            }
+          }
+        }
+      },
+      "EvidenceCreateDto": {
+        "type": "object",
+        "properties": {
+          "tradeId": {
+            "description": "Optional related trade identifier (UUID).",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dailyJournalId": {
+            "description": "Optional related daily journal identifier (UUID).",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "note": {
+            "description": "Optional evidence note text.",
+            "type": "string"
+          },
+          "screenshotPath": {
+            "description": "Optional screenshot storage path for the evidence item.",
+            "type": "string"
+          }
+        }
+      },
+      "AttachContextEventDto": {
+        "type": "object",
+        "properties": {
+          "providerEventId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Source provider event identifier (minimum 1 character)."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Economic event title (minimum 1 character)."
+          },
+          "impact": {
+            "description": "Optional event impact category.",
+            "type": "string"
+          },
+          "currency": {
+            "description": "Optional event currency code.",
+            "type": "string"
+          },
+          "eventTime": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+            "description": "Event date-time in ISO 8601 format."
+          },
+          "raw": {
+            "description": "Optional raw provider payload for the event.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "providerEventId",
+          "title",
+          "eventTime"
+        ]
+      }
+    }
+  }
+}

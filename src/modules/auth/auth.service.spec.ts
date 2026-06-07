@@ -67,6 +67,7 @@ describe('AuthService', () => {
 
     expect(result).toEqual({
       accessToken: 'jwt-token',
+      expiresIn: 86400,
       user: {
         id: 'user-id-1',
         email: 'user@example.com',
@@ -74,9 +75,48 @@ describe('AuthService', () => {
         roles: ['USER'],
       },
     });
+    expect(jwtServiceMock.sign).toHaveBeenCalledWith(
+      {
+        sub: 'user-id-1',
+        email: 'user@example.com',
+        roles: ['USER'],
+      },
+      { expiresIn: 86400 },
+    );
     expect(usersServiceMock.updateRefreshTokenHash).toHaveBeenCalledWith(
       'user-id-1',
       expect.any(String),
+    );
+  });
+
+  it('register uses thirty day session when rememberMe is true', async () => {
+    (usersServiceMock.findByEmail as jest.Mock).mockResolvedValue(null);
+    (usersServiceMock.createLocalUser as jest.Mock).mockResolvedValue({
+      id: 'user-id-1',
+      email: 'user@example.com',
+      name: 'User Name',
+      googleId: null,
+      isActive: true,
+      roles: ['USER'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    (jwtServiceMock.sign as jest.Mock).mockReturnValue('jwt-token');
+
+    await service.register({
+      email: 'user@example.com',
+      password: 'Passw0rd!',
+      name: 'User Name',
+      rememberMe: true,
+    });
+
+    expect(jwtServiceMock.sign).toHaveBeenCalledWith(
+      {
+        sub: 'user-id-1',
+        email: 'user@example.com',
+        roles: ['USER'],
+      },
+      { expiresIn: 2592000 },
     );
   });
 

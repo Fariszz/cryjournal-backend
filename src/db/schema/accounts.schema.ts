@@ -40,8 +40,8 @@ export const accounts = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (table) => ({
-    groupIdx: index('accounts_group_id_idx').on(table.groupId),
-    deletedIdx: index('accounts_deleted_at_idx').on(table.deletedAt),
-  }),
+  (table) => [
+    index('accounts_group_id_idx').on(table.groupId),
+    index('accounts_deleted_at_idx').on(table.deletedAt),
+  ],
 );

@@ -56,6 +56,28 @@ export const accountUpdateSchema = accountCreateSchema
     message: 'At least one field is required',
   });
 
+export const accountBulkCreateSchema = z
+  .array(accountCreateSchema)
+  .min(1)
+  .describe('List of accounts to create (minimum 1 item).');
+
+export const accountBulkUpdateItemSchema = accountCreateSchema
+  .partial()
+  .extend({
+    id: z.string().uuid().describe('Account identifier in UUID format.'),
+  })
+  .refine(
+    (value) => Object.keys(value).filter((key) => key !== 'id').length > 0,
+    {
+      message: 'At least one field is required',
+    },
+  );
+
+export const accountBulkUpdateSchema = z
+  .array(accountBulkUpdateItemSchema)
+  .min(1)
+  .describe('List of accounts to update (minimum 1 item).');
+
 export const accountListSchema = z.object({
   group_id: z
     .string()
@@ -76,6 +98,15 @@ export const accountIdParamSchema = z.object({
   id: z.string().uuid().describe('Account identifier in UUID format.'),
 });
 
+export const selectOptionSchema = z.object({
+  value: z.string().describe('Option value stored in the account payload.'),
+  label: z.string().describe('Human-readable option label for UI selects.'),
+});
+
+export const selectOptionListResponseSchema = z.object({
+  data: z.array(selectOptionSchema).describe('List of select options.'),
+});
+
 export class AccountGroupCreateDto extends createZodDto(
   accountGroupCreateSchema,
 ) {}
@@ -88,6 +119,10 @@ export class AccountCreateDto extends createZodDto(accountCreateSchema) {}
 
 export class AccountUpdateDto extends createZodDto(accountUpdateSchema) {}
 
+export type AccountBulkCreateDto = z.infer<typeof accountBulkCreateSchema>;
+
+export type AccountBulkUpdateDto = z.infer<typeof accountBulkUpdateSchema>;
+
 export class AccountListQueryDto extends createZodDto(accountListSchema) {}
 
 export class AccountGroupIdParamDto extends createZodDto(
@@ -95,3 +130,7 @@ export class AccountGroupIdParamDto extends createZodDto(
 ) {}
 
 export class AccountIdParamDto extends createZodDto(accountIdParamSchema) {}
+
+export class SelectOptionListResponseDto extends createZodDto(
+  selectOptionListResponseSchema,
+) {}
