@@ -9,7 +9,27 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dist/main.vercel.js"
+      "dest": "dist/main.vercel.js",
+      "methods": [
+        "GET",
+        "HEAD",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
     }
   ],
   "outputDirectory": "dist"

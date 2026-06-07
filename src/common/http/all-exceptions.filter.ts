@@ -7,6 +7,10 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { applyCorsHeaders } from '@common/http/apply-cors-headers.util';
+
+const INTERNAL_SERVER_ERROR_STATUS_CODE: number =
+  HttpStatus.INTERNAL_SERVER_ERROR;
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -16,6 +20,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
+    applyCorsHeaders(request, response);
     const requestMeta = {
       path: request.url,
       method: request.method,
@@ -41,7 +46,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
                 : [],
             };
 
-      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      if (status >= INTERNAL_SERVER_ERROR_STATUS_CODE) {
         this.logger.error(
           `HTTP exception on ${requestMeta.method} ${requestMeta.path}`,
           JSON.stringify({
