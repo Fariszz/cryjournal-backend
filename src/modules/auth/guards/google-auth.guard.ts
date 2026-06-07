@@ -14,9 +14,7 @@ export class GoogleAuthGuard extends AuthGuard('google') {
     }
     const redirectOriginQuery = request.query.redirectOrigin;
     const requestedOrigin =
-      typeof redirectOriginQuery === 'string'
-        ? redirectOriginQuery
-        : undefined;
+      typeof redirectOriginQuery === 'string' ? redirectOriginQuery : undefined;
     const resolvedOrigin = resolveOAuthRedirectOrigin(
       requestedOrigin,
       env.CORS_ALLOWED_ORIGINS,

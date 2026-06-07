@@ -6,10 +6,9 @@ describe('OptionalAuthGuard', () => {
 
   beforeEach(() => {
     guard = new OptionalAuthGuard();
-    jest.spyOn(
-      Object.getPrototypeOf(Object.getPrototypeOf(guard)),
-      'canActivate',
-    ).mockReturnValue(true);
+    jest
+      .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+      .mockReturnValue(true);
   });
 
   afterEach(() => {
