@@ -7,6 +7,10 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter';
 import { ApiResponseInterceptor } from './common/http/api-response.interceptor';
+import {
+  applyCorsHeaders,
+  handleCorsPreflightIfNeeded,
+} from './common/http/apply-cors-headers.util';
 import { getCorsOptions } from './common/http/cors-options';
 import { AppLoggerService } from './common/logging/app-logger.service';
 import { IncomingMessage, ServerResponse } from 'http';
@@ -54,8 +58,10 @@ export default async function handler(
   if (!cachedApp) {
     cachedApp = await bootstrap();
   }
-
-  // Ambil Express instance dari NestJS app
+  applyCorsHeaders(req, res);
+  if (handleCorsPreflightIfNeeded(req, res)) {
+    return;
+  }
   const expressApp = cachedApp.getHttpAdapter().getInstance();
   expressApp(req, res);
 }
